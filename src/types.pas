@@ -117,6 +117,7 @@ type
     Success: Boolean;
     Output: string;
     ErrorMessage: string;
+    ErrorCode: string;
   end;
 
   { Convert raw stop reason string to TStopReason enum }

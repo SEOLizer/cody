@@ -25,7 +25,7 @@ function ExecuteToolWithOrchestration(const ToolName: string; const InputJSON: s
 
 implementation
 
-uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration;
+uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration, tool_validation;
 
 procedure SetWorkingDirectory(const Dir: string);
 begin
@@ -48,10 +48,25 @@ end;
 function ExecuteToolByName(const ToolName: string; const InputJSON: string): TToolExecutionResult;
 var
   PermResult: TPermissionResult;
+  ValidResult: TValidationResult;
+  StartTime: Int64;
 begin
   Result.Success := False;
   Result.Output := '';
   Result.ErrorMessage := 'Tool not found: ' + ToolName;
+  StartTime := GetTickCount64;
+  
+  { Pre-execution validation hook }
+  ValidResult := PreToolHook(ToolName, InputJSON);
+  if not ValidResult.Valid then
+  begin
+    Result.Success := False;
+    Result.ErrorMessage := 'Validation failed: ' + ValidResult.ErrorMessage;
+    Result.ErrorCode := ValidResult.ErrorCode;
+    { Record stats for failed validation }
+    PostToolHook(ToolName, InputJSON, Result, GetTickCount64 - StartTime);
+    Exit;
+  end;
   
   { Check permissions first }
   PermResult := CheckToolPermission(ToolName, InputJSON);
@@ -104,6 +119,9 @@ begin
     Result := AgentToolExecute(ToolName, InputJSON)
   else if ToolName = 'Init' then
     Result := InitToolExecute(ToolName, InputJSON);
+    
+  { Post-execution hook - record statistics }
+  PostToolHook(ToolName, InputJSON, Result, GetTickCount64 - StartTime);
 end;
 
 { Execute tool with orchestration support - categorizes and decides execution strategy }
