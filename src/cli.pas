@@ -9,7 +9,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains;
 
 type
   TCLI = class
@@ -31,9 +31,8 @@ type
     procedure PrintHelp;
     procedure PrintPrompt;
     procedure ProcessCommand(const Input: string);
-    procedure HandleChat(const Input: string);
     procedure HandleChatWithThinking(const Input: string);
-    procedure HandleToolCall(const ToolName: string; const ToolInput: string; const ToolID: string);
+    procedure HandleToolCall(const ToolName: string; const ToolInput: string; const ToolID: string; out Success: Boolean; out ErrorMsg: string);
     function ParseArgs: Boolean;
     procedure InitializeTools;
     function GetSystemPrompt: string;
@@ -427,10 +426,13 @@ begin
   FLLMClient.SetTools(Tools);
 end;
 
-procedure TCLI.HandleToolCall(const ToolName: string; const ToolInput: string; const ToolID: string);
+procedure TCLI.HandleToolCall(const ToolName: string; const ToolInput: string; const ToolID: string; out Success: Boolean; out ErrorMsg: string);
 var
   Result: TToolExecutionResult;
 begin
+  Success := False;
+  ErrorMsg := '';
+  
   WriteLn('');
   Write('⚡ Executing ');
   Write(ToolName);
@@ -439,6 +441,8 @@ begin
     
   { Pass through the input as-is - the JSON parsing will handle it }
   Result := ExecuteToolByName(ToolName, ToolInput);
+  
+  Success := Result.Success;
   
   if Result.Success then
   begin
@@ -450,97 +454,12 @@ begin
   end
   else
   begin
+    ErrorMsg := Result.ErrorMessage;
     WriteLn('');
     WriteLn('✗ [Error] ' + Result.ErrorMessage);
     WriteLn('');
     Flush(Output);
     ChatHistory_AddToolResultError(ToolID, Result.ErrorMessage);
-  end;
-end;
-
-procedure TCLI.HandleChat(const Input: string);
-var
-  Messages: TMessageArray;
-  Response: TLLMResponse;
-begin
-  { Reset tool call counter for new conversation }
-  FToolCallCount := 0;
-  
-  { If in recovery mode, reset and start fresh }
-  if FInRecovery then
-  begin
-    ChatHistory_Reset;
-    ChatHistory_AddMessage(Ord(ruSystem), GetSystemPrompt);
-    ChatHistory_AddMessage(Ord(ruUser), Input);
-    FInRecovery := False;
-  end
-  else
-  begin
-    ChatHistory_AddMessage(Ord(ruUser), Input);
-  end;
-  
-  { Use GetMessagesForLMStudio which handles LM Studio compatibility }
-  Messages := ChatHistory_GetMessagesForLMStudio(True);
-  
-  Write('⋯ Calling LLM');
-  WriteLn('...');
-  Flush(Output);
-  try
-    Response := FLLMClient.Chat(Messages, True); { First call - WITH tools }
-    
-    { Loop through tool calls until no more or limit reached }
-    while Response.HasToolCall and (FToolCallCount < MAX_TOOL_CALLS) do
-    begin
-      Inc(FToolCallCount);
-      Write('[Tool Call: ');
-      Write(Response.ToolCallName);
-      WriteLn('] (', FToolCallCount, '/', MAX_TOOL_CALLS, ')');
-      Flush(Output);
-      ChatHistory_AddToolUse(Response.ToolCallName, Response.ToolCallID, Response.ToolCallInput);
-      HandleToolCall(Response.ToolCallName, Response.ToolCallInput, Response.ToolCallID);
-      
-      WriteLn('→ Calling LLM again...');
-      Flush(Output);
-      Messages := ChatHistory_GetMessagesForLMStudio(False);
-      { Second call - WITHOUT tools to avoid loop, LM Studio handles tool loop internally }
-      Response := FLLMClient.Chat(Messages, False);
-    end;
-    
-    { Handle different stop reasons }
-    case Response.StopReason of
-      srEndTurn:
-        WriteLn('✓ Task completed (end_turn)');
-      srToolUse:
-        if FToolCallCount >= MAX_TOOL_CALLS then
-        begin
-          WriteLn('⚠ Reached maximum tool call limit (', MAX_TOOL_CALLS, ')');
-        end;
-      srMaxTokens:
-        WriteLn('⚠ Output limit reached (max_tokens) - response may be truncated');
-      srLength:
-        WriteLn('⚠ Length limit reached - response may be truncated');
-      srUnknown:
-        WriteLn('⚠ Unknown stop reason: ', Response.StopReasonRaw);
-    end;
-    
-    WriteLn('');
-    WriteLn(Response.Content);
-    WriteLn('');
-    WriteLn('');
-    Flush(Output);
-    
-    { Only add non-empty assistant messages to history }
-    if Response.Content <> '' then
-      ChatHistory_AddMessage(Ord(ruAssistant), Response.Content);
-  except
-    on E: Exception do
-    begin
-      WriteLn('Error: ', E.Message);
-      { Set recovery flag and clear history }
-      FInRecovery := True;
-      ChatHistory_Clear;
-      ChatHistory_AddMessage(Ord(ruSystem), GetSystemPrompt);
-    end;
   end;
 end;
 
@@ -554,11 +473,17 @@ var
   ToolExecutionSuccessful: Boolean;
   HasResult: Boolean;
   EvalPrompt: string;
+  ToolErrorMsg: string;
+  ReasoningChain: TReasoningChain;
+  StepStartTime: Int64;
 begin
   MaxIterations := 20;
   Iterations := 0;
   FToolCallCount := 0;
   HasResult := False;
+  
+  { Initialize reasoning chain for step tracking }
+  InitReasoningChain(ReasoningChain, 5);
   
   { Add user input }
   ChatHistory_AddMessage(Ord(ruUser), Input);
@@ -624,15 +549,63 @@ begin
       Inc(FToolCallCount);
       ToolExecutionSuccessful := True;
       
+      { Create checkpoint before executing step }
+      CreateCheckpoint(ReasoningChain, 'Before step ' + IntToStr(FToolCallCount) + ': ' + Response.ToolCallName);
+      
       WriteLn('');
       WriteLn('[Tool Call: ', Response.ToolCallName, '] (', FToolCallCount, '/', MAX_TOOL_CALLS, ')');
+      WriteLn('[Step ', GetCurrentStep(ReasoningChain), '] ', GetStateDescription(ReasoningChain.CurrentState));
       Flush(Output);
       ChatHistory_AddToolUse(Response.ToolCallName, Response.ToolCallID, Response.ToolCallInput);
       
-      { Execute the tool and capture result }
-      HandleToolCall(Response.ToolCallName, Response.ToolCallInput, Response.ToolCallID);
+      { Track step start }
+      StepStartTime := GetTickCount64;
+      SetState(ReasoningChain, esExecuting);
       
-      { Check if tool execution was successful }
+      { Execute the tool and capture result }
+      HandleToolCall(Response.ToolCallName, Response.ToolCallInput, Response.ToolCallID, ToolExecutionSuccessful, ToolErrorMsg);
+      
+      { Record execution time }
+      StepStartTime := GetTickCount64 - StepStartTime;
+      
+      { Handle tool failure with rollback option }
+      if not ToolExecutionSuccessful then
+      begin
+        WriteLn('');
+        WriteLn('[Tool Error] Tool execution failed: ', ToolErrorMsg);
+        WriteLn('[Rollback] Checking if rollback is possible...');
+        Flush(Output);
+        
+        { Try to rollback if checkpoints exist }
+        if CanRollback(ReasoningChain) then
+        begin
+          WriteLn('[Rollback] Rolling back to last checkpoint...');
+          Flush(Output);
+          RollbackToLastCheckpoint(ReasoningChain);
+          SetState(ReasoningChain, esPlanning);
+          
+          { Add error context to prompt for retry }
+          ChatHistory_AddMessage(Ord(ruUser), 
+            'The previous tool execution failed: ' + ToolErrorMsg + 
+            '. Please try a different approach or alternative tool.');
+        end
+        else
+        begin
+          WriteLn('[Rollback] No checkpoints available. Continuing with error context.');
+          Flush(Output);
+          SetState(ReasoningChain, esFailed);
+          
+          { Add error context for recovery attempt }
+          ChatHistory_AddMessage(Ord(ruUser), 
+            'The previous tool execution failed: ' + ToolErrorMsg + 
+            '. Please try an alternative approach.');
+        end;
+      end;
+      
+      { Record step completion }
+      SetState(ReasoningChain, esEvaluating);
+      
+      { Check if tool execution was successful - look for error in last message }
       { (we need to check the last tool result in history) }
       { Now ask LLM to evaluate the result and decide next steps }
       WriteLn('');
@@ -755,6 +728,11 @@ begin
     end;
   end;
   
+  { Display execution summary }
+  WriteLn('');
+  WriteLn(GetStepSummary(ReasoningChain));
+  Flush(Output);
+  
   { Final response to user }
   if HasResult then
   begin
@@ -870,7 +848,7 @@ begin
     begin
       WriteLn('Executing skill: /' + Cmd);
       Flush(Output);
-      HandleChat(SkillPrompt);
+      HandleChatWithThinking(SkillPrompt);
     end
     else
     begin
@@ -960,7 +938,7 @@ begin
   begin
     { Explicitly disable thinking mode for this input }
     if Arg <> '' then
-      HandleChat(Arg)
+      HandleChatWithThinking(Arg)
     else
     begin
       WriteLn('Usage: /no-think <prompt> - Run without thinking mode');
