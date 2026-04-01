@@ -348,10 +348,12 @@ var
   RawStopReason: string;
 begin
   Result.Content := '';
+  Result.Thinking := '';
   Result.ToolCallName := '';
   Result.ToolCallID := '';
   Result.ToolCallInput := '';
   Result.HasToolCall := False;
+  Result.ResponseType := rtNone;
   Result.StopReason := srUnknown;
   Result.StopReasonRaw := '';
   Result.UsageInputTokens := 0;
@@ -395,6 +397,9 @@ begin
   
   Result.UsageInputTokens := StrToIntDef(ExtractJSONValue(JSON, 'prompt_tokens'), 0);
   Result.UsageOutputTokens := StrToIntDef(ExtractJSONValue(JSON, 'completion_tokens'), 0);
+  
+  { Determine response type }
+  Result.ResponseType := DetermineResponseType(Result);
 end;
 
 function TLLMClient.ParseOllamaResponse(const JSON: string): TLLMResponse;
@@ -403,10 +408,12 @@ var
   RawStopReason: string;
 begin
   Result.Content := '';
+  Result.Thinking := '';
   Result.ToolCallName := '';
   Result.ToolCallID := '';
   Result.ToolCallInput := '';
   Result.HasToolCall := False;
+  Result.ResponseType := rtNone;
   Result.StopReason := srStop;
   Result.StopReasonRaw := 'stop';
   Result.UsageInputTokens := 0;
@@ -441,6 +448,9 @@ begin
       Result.StopReason := ParseStopReason(RawStopReason);
     end;
   end;
+  
+  { Determine response type }
+  Result.ResponseType := DetermineResponseType(Result);
 end;
 
 function TLLMClient.ParseResponse(const ResponseJSON: string): TLLMResponse;
