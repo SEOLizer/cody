@@ -9,7 +9,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression;
 
 type
   TCLI = class
@@ -170,6 +170,9 @@ begin
     '- Use tools ONLY when you need to read files, run commands, or make changes' + LineEnding +
     '- When analyzing code, first read the files then provide your assessment' + LineEnding +
     '- When refactoring, explain your plan before making changes' + LineEnding +
+    '- IMPORTANT: When you need to use a tool, output ONLY in this JSON format: [{"name": "TOOL_NAME", "arguments": {"param1": "value1", "param2": "value2"}}]' + LineEnding +
+    '- Example: For Bash tool with "ls -la": [{"name": "Bash", "arguments": {"command": "ls -la"}}]' + LineEnding +
+    '- After the JSON, add <end_of_turn> marker' + LineEnding +
     LineEnding +
     'AVAILABLE TOOLS:' + LineEnding +
     '- Bash: Execute shell commands (use for running tests, build commands)' + LineEnding +
@@ -571,6 +574,16 @@ begin
     Messages := ChatHistory_GetMessagesForLMStudio(True);
     Response := FLLMClient.Chat(Messages, True);
     
+    { Check for context errors and trigger reactive compression }
+    if (Response.Content = '') and (GetContextState.CompressionCount > 0) then
+    begin
+      { Previous compression failed, try more aggressive compression }
+      WriteLn('[Context Warning] Previous compression not sufficient, attempting aggressive recovery...');
+      Messages := ChatHistory_GetMessagesForLMStudio(True);
+      TriggerReactiveCompression(Messages);
+      Response := FLLMClient.Chat(Messages, True);
+    end;
+    
     { Display thinking }
     WriteLn(Response.Content);
     Flush(Output);
@@ -658,9 +671,35 @@ begin
     begin
       WriteLn('[Thinking Error]: ', E.Message);
       Flush(Output);
-      FInRecovery := True;
-      ChatHistory_Reset;
-      ChatHistory_AddMessage(Ord(ruSystem), GetSystemPrompt);
+      
+      { Check if it's a context error - try reactive compression }
+      if Pos('413', E.Message) > 0 then
+      begin
+        WriteLn('[Context Error] Request too large. Attempting reactive compression...');
+        { Reset and try with minimal context }
+        ChatHistory_Reset;
+        ChatHistory_AddMessage(Ord(ruSystem), GetSystemPrompt);
+        ChatHistory_AddMessage(Ord(ruUser), Input);
+        try
+          Messages := ChatHistory_GetMessagesForLMStudio(True);
+          TriggerReactiveCompression(Messages);
+          Response := FLLMClient.Chat(Messages, True);
+          if Response.Content <> '' then
+          begin
+            WriteLn('[Recovery] Successfully recovered with compressed context!');
+            WriteLn(Response.Content);
+            HasResult := True;
+          end;
+        except
+          WriteLn('[Recovery Failed] Could not recover from context error.');
+        end;
+      end
+      else
+      begin
+        FInRecovery := True;
+        ChatHistory_Reset;
+        ChatHistory_AddMessage(Ord(ruSystem), GetSystemPrompt);
+      end;
     end;
   end;
   
@@ -1030,6 +1069,7 @@ begin
     InitializeTools;
     SetWorkingDirectory(FConfig.WorkingDirectory);
     SetLLMClient(FLLMClient);  { Register LLM client globally for Agent tool }
+    InitContextCompression;  { Initialize context compression module }
     WriteLn('Working directory: ', FConfig.WorkingDirectory);
     Flush(Output);
   except
