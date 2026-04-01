@@ -29,6 +29,7 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | **FileTree** | Verzeichnisbaum Struktur anzeigen |
 | **Move** | Dateien/Verzeichnisse verschieben oder umbenennen |
 | **Mkdir** | Neues Verzeichnis erstellen |
+| **Delete** | Dateien/Verzeichnisse löschen |
 | **Glob** | Dateien nach Pattern suchen |
 | **Grep** | Inhalten in Dateien suchen |
 | **TaskCreate** | Aufgabe in Task-Liste erstellen |

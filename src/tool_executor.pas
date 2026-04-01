@@ -20,7 +20,7 @@ function ExecuteToolByName(const ToolName: string; const InputJSON: string): TTo
 
 implementation
 
-uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient;
+uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient;
 
 procedure SetWorkingDirectory(const Dir: string);
 begin
@@ -62,6 +62,8 @@ begin
     Result := MoveToolExecute(ToolName, InputJSON)
   else if ToolName = 'Mkdir' then
     Result := MkdirToolExecute(ToolName, InputJSON)
+  else if ToolName = 'Delete' then
+    Result := DeleteToolExecute(ToolName, InputJSON)
   else if ToolName = 'Glob' then
     Result := GlobToolExecute(ToolName, InputJSON)
   else if ToolName = 'Grep' then
