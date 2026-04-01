@@ -196,6 +196,14 @@ begin
   Result.ToolType := ttWebSearch;
 end;
 
+function CreateForkToolDefinition: TToolDefinition;
+begin
+  Result.Name := 'Fork';
+  Result.Description := 'Fork sub-agents for parallel execution. Supports single and parallel fork modes with parent context inheritance.';
+  Result.InputSchema := '{"type":"object","properties":{"prompt":{"type":"string","description":"Task prompt for forked agent"},"agent_type":{"type":"string","description":"Agent type: explore, plan, or general"},"fork_type":{"type":"string","description":"fork_type: single or parallel"}},"required":["prompt"]}';
+  Result.ToolType := ttFork;
+end;
+
 initialization
   GlobalToolRegistry := TToolRegistry.Create;
   GlobalToolRegistry.RegisterTool(CreateBashToolDefinition, nil);
@@ -207,6 +215,7 @@ initialization
   GlobalToolRegistry.RegisterTool(CreateLSToolDefinition, nil);
   GlobalToolRegistry.RegisterTool(CreateWebFetchToolDefinition, nil);
   GlobalToolRegistry.RegisterTool(CreateWebSearchToolDefinition, nil);
+  GlobalToolRegistry.RegisterTool(CreateForkToolDefinition, nil);
 
 finalization
   GlobalToolRegistry.Free;

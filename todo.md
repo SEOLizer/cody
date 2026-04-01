@@ -94,11 +94,11 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [x] Summary-Rückgabe an Haupt-Agent
   - [x] Integrierte Typen: Explore, Plan, Custom
 
-- [ ] **Fork Subagents**
-  - [ ] Hintergrundausführung
-  - [ ] Voller Parent-Kontext vererbt
-  - [ ] Asynchrone Ausführung
-  - [ ] Rekursions-Schutz
+- [x] **Fork Subagents**
+  - [x] Hintergrundausführung
+  - [x] Voller Parent-Kontext vererbt
+  - [x] Asynchrone Ausführung
+  - [x] Rekursions-Schutz
 
 ### 3.2 Parallele Verarbeitung
 - [ ] **Concurrent Tool Execution**
