@@ -125,9 +125,9 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [ ] Pro-Tool-Result Caching
   - [ ] Cache-Invalidierung bei großen Ergebnissen
 
-- [ ] **Reactive Compact**
-  - [ ] Notfall-Wiederherstellung bei 413-Fehlern
-  - [ ] Vollständige Neuzusammenfassung
+- [x] **Reactive Compact**
+  - [x] Notfall-Wiederherstellung bei 413-Fehlern (2026-04-01 implementiert)
+  - [x] Vollständige Neuzusammenfassung (context_compression.pas)
 
 ### 4.2 Session Memory
 - [ ] **Hintergrund-Speicher-Extraktion**
@@ -174,9 +174,9 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [ ] Auf Fallback-Modell wechseln bei hoher Last
   - [ ] Max-Output-Token Wiederherstellung (8k → 64k)
 
-- [ ] **Reaktive Komprimierung**
-  - [ ] Vollständige Neuzusammenfassung bei "prompt too long"
-  - [ ] Context-Collapse-Drain: Staged Collapses freigeben vor Retry
+- [x] **Reaktive Komprimierung**
+  - [x] Vollständige Neuzusammenfassung bei "prompt too long" (2026-04-01 implementiert)
+  - [x] Context-Collapse-Drain: Staged Collapses freigeben vor Retry
 
 ### 6.2 Tool-Ausführungsfehler
 - [ ] **Tool Error Handling**
@@ -380,7 +380,7 @@ Der Agent gilt als "vollständig funktionierend" wenn:
 | 2 | **Konfiguration** | Config-Datei (JSON) statt nur CLI-Parameter | [ ] Nicht umgesetzt | Mittel |
 | 3 | **History** | Persistenter Chat-Verlauf zwischen Sessions | [ ] Nicht umgesetzt | Mittel |
 | 4 | **Multi-Agent** | Mehrere Sub-Agents gleichzeitig | [ ] Nicht umgesetzt | Niedrig |
-| 5 | **Tool-Chaining** | Mehrere Tools in einem Aufruf | [ ] Nicht umgesetzt | Niedrig |
+| 5 | **Context Compression** | Automatische/reaktive Context-Komprimierung bei Token-Limit | [x] Implementiert (2026-04-01) | Mittel |
 
 ---
 
