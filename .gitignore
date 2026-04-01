@@ -1,0 +1,23 @@
+# Free Pascal compiled files
+*.o
+*.ppu
+*.a
+*.ppl
+*.compiled
+
+# Binary executable
+agent
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific
+todo.md
