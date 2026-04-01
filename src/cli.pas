@@ -8,7 +8,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper;
 
 type
   TCLI = class
@@ -62,24 +62,35 @@ uses
   tool_executor;
 
 procedure TCLI.PrintWelcome;
+var
+  FrameLines: array[0..6] of string;
 begin
-  WriteLn('=================================================');
-  WriteLn('  AI Assistant - Generic LLM CLI with Tools');
-  WriteLn('=================================================');
-  WriteLn('');
-  WriteLn('Commands: /help, /clear, /save, /load, /quit, /think, /skills, /no-think');
-  WriteLn('Default: All prompts use Thinking Mode with evaluation loop');
-  WriteLn('Available Tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskList, TaskUpdate, Agent');
+  { Initialize UI }
+  InitUI;
+  
+  { Create welcome content }
+  FrameLines[0] := 'AI Assistant - Generic LLM CLI with Tools';
+  FrameLines[1] := '';
+  FrameLines[2] := 'Commands: /help, /clear, /save, /load, /quit, /think, /skills, /no-think';
+  FrameLines[3] := 'Default: All prompts use Thinking Mode with evaluation loop';
+  FrameLines[4] := '';
+  FrameLines[5] := 'Available Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  FrameLines[6] := 'Task Tools: TaskCreate, TaskList, TaskUpdate, Agent, Init';
+  
+  PrintFrame('AI ASSISTANT', FrameLines);
   WriteLn('');
   Flush(Output);
 end;
 
 procedure TCLI.PrintHelp;
+var
+  FrameLines: array[0..3] of string;
 begin
-  WriteLn('Commands: /help, /clear, /save [f], /load [f], /quit, /model, /url, /no-think');
-  WriteLn('Default: All prompts use Thinking Mode (evaluation loop)');
-  WriteLn('Use /no-think for simple prompts without evaluation');
-  WriteLn('Tools: Bash, Read, Write, Edit, Glob, Grep');
+  FrameLines[0] := 'Commands: /help, /clear, /save [f], /load [f], /quit, /model, /url, /no-think';
+  FrameLines[1] := 'Default: All prompts use Thinking Mode (evaluation loop)';
+  FrameLines[2] := 'Use /no-think for simple prompts without evaluation';
+  FrameLines[3] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  PrintFrame('HELP', FrameLines);
   WriteLn('');
   Flush(Output);
 end;
@@ -404,6 +415,11 @@ begin
   Tools[15].Description := 'Create or update PROJECT.md with project documentation';
   Tools[15].Parameters := '{"type":"object","properties":{"file_path":{"type":"string","description":"Optional: filename (default: PROJECT.md)"},"content":{"type":"string","description":"Optional: full markdown content. If empty, creates template"}},"required":[]}';
   
+  // WebFetch tool
+  Tools[16].Name := 'WebFetch';
+  Tools[16].Description := 'Fetch content from a URL';
+  Tools[16].Parameters := '{"type":"object","properties":{"url":{"type":"string","description":"URL to fetch"},"format":{"type":"string","description":"Output format: text, markdown, or html (default: markdown)"}},"required":["url"]}';
+  
   FLLMClient.SetTools(Tools);
 end;
 
@@ -486,13 +502,21 @@ begin
       Response := FLLMClient.Chat(Messages, False);
     end;
     
-    { Check if we hit the limit }
-    if FToolCallCount >= MAX_TOOL_CALLS then
-    begin
-      WriteLn('');
-      WriteLn('⚠ Reached maximum tool call limit (', MAX_TOOL_CALLS, '). Ending tool loop.');
-      WriteLn('');
-      Flush(Output);
+    { Handle different stop reasons }
+    case Response.StopReason of
+      srEndTurn:
+        WriteLn('✓ Task completed (end_turn)');
+      srToolUse:
+        if FToolCallCount >= MAX_TOOL_CALLS then
+        begin
+          WriteLn('⚠ Reached maximum tool call limit (', MAX_TOOL_CALLS, ')');
+        end;
+      srMaxTokens:
+        WriteLn('⚠ Output limit reached (max_tokens) - response may be truncated');
+      srLength:
+        WriteLn('⚠ Length limit reached - response may be truncated');
+      srUnknown:
+        WriteLn('⚠ Unknown stop reason: ', Response.StopReasonRaw);
     end;
     
     WriteLn('');
@@ -791,6 +815,7 @@ begin
   begin
     WriteLn('Goodbye!');
     Flush(Output);
+    SwitchToMainScreen;
     Halt(0);
   end
   else if (Cmd = '/clear') then
@@ -991,7 +1016,14 @@ var
 begin
   if not ParseArgs then
     Exit;
-    
+  
+  { Switch to alternate screen buffer at start }
+  { Debug: Print ESC sequence directly }
+  Write(#27'[?1049h');  { Switch to alternate screen }
+  Write(#27'[2J');      { Clear entire screen }
+  Write(#27'[1;1H');    { Go to position 1,1 }
+  Flush(Output);
+  
   try
     FLLMClient := TLLMClient.Create(FConfig, FFormat);
     InitializeTools;
@@ -1004,6 +1036,7 @@ begin
     begin
       WriteLn('Failed to create LLM client: ', E.Message);
       Flush(Output);
+      SwitchToMainScreen;
       Exit;
     end;
   end;
@@ -1031,9 +1064,12 @@ begin
       Flush(Output);
     end;
   end;
-  
+
   WriteLn('Entering main loop...');
   Flush(Output);
+  
+  { Print initial status bar }
+  PrintStatusBar;
   
   while True do
   begin
@@ -1066,6 +1102,9 @@ begin
       end;
     end;
     FIsProcessing := False;
+    
+    { Update and print status bar after each command }
+    PrintStatusBar;
   end;
 end;
 

@@ -111,6 +111,9 @@ begin
     JSONBody := JSONBody + ',"tools":[';
     for i := Low(FTools) to High(FTools) do
     begin
+      { Skip empty tool names }
+      if FTools[i].Name = '' then
+        Continue;
       if i > Low(FTools) then
         JSONBody := JSONBody + ',';
       JSONBody := JSONBody + '{"type":"function","function":{"name":"' + FTools[i].Name + '",' +
@@ -342,13 +345,15 @@ end;
 function TLLMClient.ParseOpenAIResponse(const JSON: string): TLLMResponse;
 var
   ToolCallsStart, ToolCallObjStart: Integer;
+  RawStopReason: string;
 begin
   Result.Content := '';
   Result.ToolCallName := '';
   Result.ToolCallID := '';
   Result.ToolCallInput := '';
   Result.HasToolCall := False;
-  Result.FinishReason := '';
+  Result.StopReason := srUnknown;
+  Result.StopReasonRaw := '';
   Result.UsageInputTokens := 0;
   Result.UsageOutputTokens := 0;
   
@@ -356,6 +361,10 @@ begin
   ToolCallsStart := FindKeyPosition(JSON, 'tool_calls');
   if ToolCallsStart > 0 then
   begin
+    // Tool call detected - set stop reason accordingly
+    Result.StopReason := srToolUse;
+    Result.StopReasonRaw := 'tool_calls';
+    
     // Find the first { in the tool_calls array
     ToolCallObjStart := ToolCallsStart;
     while (ToolCallObjStart <= Length(JSON)) and (JSON[ToolCallObjStart] <> '{') do
@@ -377,7 +386,11 @@ begin
     if FindKeyPosition(JSON, '"message"') = 0 then
       Exit;
     Result.Content := ExtractJSONValue(JSON, 'content');
-    Result.FinishReason := ExtractJSONValue(JSON, 'finish_reason');
+    
+    // Parse stop reason
+    RawStopReason := ExtractJSONValue(JSON, 'finish_reason');
+    Result.StopReasonRaw := RawStopReason;
+    Result.StopReason := ParseStopReason(RawStopReason);
   end;
   
   Result.UsageInputTokens := StrToIntDef(ExtractJSONValue(JSON, 'prompt_tokens'), 0);
@@ -387,13 +400,15 @@ end;
 function TLLMClient.ParseOllamaResponse(const JSON: string): TLLMResponse;
 var
   ToolCallsPos: Integer;
+  RawStopReason: string;
 begin
   Result.Content := '';
   Result.ToolCallName := '';
   Result.ToolCallID := '';
   Result.ToolCallInput := '';
   Result.HasToolCall := False;
-  Result.FinishReason := 'stop';
+  Result.StopReason := srStop;
+  Result.StopReasonRaw := 'stop';
   Result.UsageInputTokens := 0;
   Result.UsageOutputTokens := 0;
   
@@ -404,6 +419,10 @@ begin
   ToolCallsPos := FindKeyPosition(JSON, 'tool_calls');
   if ToolCallsPos > 0 then
   begin
+    // Tool call detected
+    Result.StopReason := srToolUse;
+    Result.StopReasonRaw := 'tool_calls';
+    
     // Extract from tool_calls array
     Result.ToolCallName := ExtractJSONValue(JSON, 'name');
     Result.ToolCallID := ExtractJSONValue(JSON, 'id');
@@ -413,6 +432,14 @@ begin
   else
   begin
     Result.Content := ExtractJSONValue(JSON, 'content');
+    
+    // Ollama doesn't always send stop reason, check for 'done' field
+    RawStopReason := ExtractJSONValue(JSON, 'done_reason');
+    if RawStopReason <> '' then
+    begin
+      Result.StopReasonRaw := RawStopReason;
+      Result.StopReason := ParseStopReason(RawStopReason);
+    end;
   end;
 end;
 
