@@ -7,16 +7,16 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
 ## Phase 1: Kern-Infrastruktur (Foundation)
 
 ### 1.1 Erweiterte Nachrichtenverwaltung
-- [ ] **Message History Management**
-  - [ ] Speichern/Laden von Konversationen (session persistence)
-  - [ ] Context-Kompression bei Überschreitung der Token-Limit
-  - [ ] Mikrofokus-Kompression für Tool-Ergebnisse
-  - [ ] Reaktive Komprimierung bei API-Fehlern
+- [x] **Message History Management** (2026-04-01 implementiert)
+  - [x] Speichern/Laden von Konversationen (session persistence)
+  - [x] Context-Kompression bei Überschreitung der Token-Limit
+  - [x] Mikrofokus-Kompression für Tool-Ergebnisse
+  - [x] Reaktive Komprimierung bei API-Fehlern
 
-- [ ] **Three-Layer Memory System**
-  - [ ] CLAUDE.md Unterstützung (Projekt-Memory)
-    - [ ] Lesen von ~/.claude/CLAUDE.md
-    - [ ] Lesen von ./CLAUDE.md im Projektverzeichnis
+- [x] **Three-Layer Memory System** (2026-04-01 implementiert)
+  - [x] CLAUDE.md Unterstützung (Projekt-Memory)
+    - [x] Lesen von ~/.claude/CLAUDE.md
+    - [x] Lesen von ./CLAUDE.md im Projektverzeichnis
   - [ ] Session Memory (Hintergrund-Agent für Informations-Extraktion)
   - [x] Todo-Listen als Working Memory
     - [x] Working Memory Modul implementiert (working_memory.pas)

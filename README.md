@@ -51,11 +51,23 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 
 | Feature | Beschreibung |
 |---------|--------------|
-| **Working Memory** | Todo-Listen werden automatisch zwischen Sessions gespeichert/geladen |
+| **Chat History** | Speichern/Laden von Konversationen mit `/save` und `/load` |
 | **Context-Kompression** | Verhindert Token-Limit-Fehler durch automatische Kontext-Zusammenfassung |
-| **Reaktive Kompression** | Automatische Wiederherstellung bei 413-Fehlern |
+| **Micro-Compact** | Komprimiert einzelne Tool-Ergebnisse bei >50% Kapazität |
+| **Auto-Compact** | Volle Zusammenfassung bei >92% Token-Kapazität |
+| **Reaktive Kompression** | Automatische Wiederherstellung bei 413/400-Fehlern |
 | **Reasoning Chains** | Schritt-für-Schritt Ausführung mit Checkpoints für Rollback |
+| **CLAUDE.md** | Projekt-Memory aus ~/.claude/CLAUDE.md und ./CLAUDE.md |
+| **Working Memory** | Todo-Listen werden automatisch zwischen Sessions gespeichert/geladen |
 | **Error Recovery** | Automatische Wiederherstellung bei API-Fehlern |
+
+### 🧠 Three-Layer Memory System
+
+| Layer | Quelle | Zweck |
+|-------|--------|-------|
+| **Global** | `~/.claude/CLAUDE.md` | Allgemeine Präferenzen und Einstellungen |
+| **Project** | `./CLAUDE.md` | Projekt-spezifische Anweisungen |
+| **Subdir** | `./<subdir>/CLAUDE.md` | Verzeichnis-spezifische Regeln |
 
 ### 🧠 Intelligente Verarbeitung
 
@@ -225,15 +237,16 @@ agent/
 ├── src/
 │   ├── agent.lpr           # Main program
 │   ├── cli.pas             # CLI Interface & System Prompt
-│   ├── chathistory.pas     # Chat-Verwaltung (global)
+│   ├── chathistory.pas     # Chat-Verwaltung mit Save/Load
 │   ├── llmclient.pas       # LLM API Client (Ollama + OpenAI)
 │   ├── httpclient.pas      # HTTP Client
 │   ├── types.pas           # Type-Definitionen (inkl. StopReasons, ResponseTypes)
 │   ├── tool_executor.pas   # Tool-Ausführung mit Permission-Checks
 │   ├── tool_permissions.pas # Permission System (Auto/Ask/Strict)
 │   ├── reasoning_chains.pas # Reasoning Chains & Checkpoints
-│   ├── context_compression.pas # Context Kompression
+│   ├── context_compression.pas # Context Kompression (Auto/Micro/Reactive)
 │   ├── thinking_planning.pas # Task Analysis & Planning
+│   ├── claude_md.pas       # CLAUDE.md Integration (Projekt-Memory)
 │   ├── ui_helper.pas       # Terminal UI Hilfsfunktionen
 │   ├── cursor_helper.pas   # Cursor Kontrolle
 │   ├── working_memory.pas  # Todo-Listen Persistenz
