@@ -53,6 +53,8 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 |---------|--------------|
 | **Working Memory** | Todo-Listen werden automatisch zwischen Sessions gespeichert/geladen |
 | **Context-Kompression** | Verhindert Token-Limit-Fehler durch automatische Kontext-Zusammenfassung |
+| **Reaktive Kompression** | Automatische Wiederherstellung bei 413-Fehlern |
+| **Reasoning Chains** | Schritt-für-Schritt Ausführung mit Checkpoints für Rollback |
 | **Error Recovery** | Automatische Wiederherstellung bei API-Fehlern |
 
 ### 🧠 Intelligente Verarbeitung
@@ -62,6 +64,8 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | **Stop Reasons** | Erkennt: end_turn (fertig), tool_use (Tool nötig), max_tokens (Limit erreicht) |
 | **Response Types** | Kategorisiert: Text, Tool-Use, Thinking/Reasoning |
 | **Thinking Mode** | Iterative Evaluation mit Selbstkorrektur |
+| **Task Analysis** | Automatische Komplexitätserkennung (Simple/Moderate/Complex) |
+| **Plan Verification** | Überprüfung der Aufgaben-Vervollständigung |
 | **MAX_TOOL_CALLS Limit** | Verhindert endlose Tool-Schleifen (Standard: 15) |
 
 ### 🎮 Verfügbare Commands
@@ -107,6 +111,9 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | `/think <prompt>` | Thinking-Mode aktivieren |
 | `/no-think <prompt>` | Ohne Thinking-Mode |
 | `/skills` | Skills verwalten |
+| `/run <file>` | Prompts aus Datei ausführen |
+| `/model` | Modell-Info anzeigen |
+| `/url` | Server-URL anzeigen |
 
 ## Beispiel-Prompts
 
@@ -197,10 +204,19 @@ fpc -O2 -g -XX src/agent.lpr
 | `-u <url>` | API Base URL | http://localhost:11434 |
 | `-m <model>` | Modellname | llama3 |
 | `-k <key>` | API Key | (leer) |
+| `-f <file>` | Prompts aus Datei ausführen (non-interaktiv) | - |
 | `-w <dir>` | Working Directory | aktuelles Verzeichnis |
 | `--openai` | OpenAI-Format verwenden | Ollama-Format |
 | `--ollama` | Ollama-Format verwenden | Standard |
 | `-h, --help` | Hilfe anzeigen | - |
+
+### Eingabe-Modi
+
+| Modus | Beschreibung |
+|-------|--------------|
+| **Interaktiv** | Direkte Eingabe im Terminal (Standard) |
+| **Datei-basiert** | Prompts aus Datei mit `-f` Parameter |
+| **Piped Input** | `echo "prompt" \| ./agent` oder `./agent < prompts.txt` |
 
 ## Dateistruktur
 
@@ -251,11 +267,23 @@ agent/
 Der Agent verwendet standardmäßig den "Thinking Mode" mit Evaluations-Loop:
 
 1. User-Input empfangen
-2. LLM mit Tools aufrufen
-3. Tool ausführen
-4. **Ergebnis evaluieren**: War es erfolgreich? Gab es Fehler?
-5. Bei Bedarf alternative Ansätze versuchen
-6. Weiter bis keine Tools mehr benötigt werden
+2. Task-Komplexität analysieren (Simple/Moderate/Complex)
+3. LLM mit Tools aufrufen
+4. Checkpoint vor Tool-Ausführung erstellen
+5. Tool ausführen
+6. **Ergebnis evaluieren**: War es erfolgreich? Gab es Fehler?
+7. Bei Fehlern: Rollback zum letzten Checkpoint und alternative Ansätze versuchen
+8. Schritt-Zusammenfassung anzeigen
+9. Weiter bis keine Tools mehr benötigt werden
+
+### Reasoning Chains
+
+Jede Tool-Ausführung wird in einer Reasoning Chain verfolgt:
+
+- **State Tracking**: Planning → Executing → Evaluating → Completed/Failed
+- **Checkpoints**: Vor jedem Schritt wird ein Checkpoint erstellt
+- **Rollback**: Bei Fehlern kann zum letzten Checkpoint zurückgerollt werden
+- **Step Summary**: Nach Abschluss wird eine Zusammenfassung aller Schritte angezeigt
 
 Dies ermöglicht dem Agenten, autonom zu arbeiten und seine Aktionen kritisch zu bewerten.
 

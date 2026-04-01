@@ -226,16 +226,17 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
 ## Phase 8: Integration und APIs
 
 ### 8.1 CLI Interface
-- [ ] **Befehlsverarbeitung**
-  - [ ] /help, /clear, /save, /load, /quit
-  - [ ] /think für Thinking-Mode
-  - [ ] /model für Modell-Info
-  - [ ] /url für Server-Info
+- [x] **Befehlsverarbeitung** (2026-04-01 implementiert)
+  - [x] /help, /clear, /save, /load, /quit
+  - [x] /think für Thinking-Mode
+  - [x] /model für Modell-Info
+  - [x] /url für Server-Info
+  - [x] /run <file> - Prompts aus Datei ausführen
 
-- [ ] **Eingabe-Modi**
-  - [ ] Interaktiver Modus
-  - [ ] Nicht-interaktiver Modus ( piped input)
-  - [ ] Datei-basiertes Input
+- [x] **Eingabe-Modi** (2026-04-01 implementiert)
+  - [x] Interaktiver Modus
+  - [x] Nicht-interaktiver Modus ( piped input)
+  - [x] Datei-basiertes Input mit -f Parameter
 
 ### 8.2 LM Studio / Ollama Integration
 - [ ] **Ollama API Format**

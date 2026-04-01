@@ -26,6 +26,7 @@ type
     FGitInitialized: Boolean;
     FGitAvailable: Boolean;
     FSystemPrompt: string;
+    FInputFile: string;
     const MAX_TOOL_CALLS = 15;
     procedure PrintWelcome;
     procedure PrintHelp;
@@ -45,6 +46,8 @@ type
     function TryDequeueInput: string;
     { Handle skill commands }
     procedure HandleSkillCommand(const Input: string);
+    { Run commands from file }
+    procedure HandleRunFile(const Filename: string);
     { Git detection and initialization }
     procedure DetectGit;
     function CheckGitAvailable: Boolean;
@@ -84,12 +87,14 @@ end;
 
 procedure TCLI.PrintHelp;
 var
-  FrameLines: array[0..3] of string;
+  FrameLines: array[0..5] of string;
 begin
   FrameLines[0] := 'Commands: /help, /clear, /save [f], /load [f], /quit, /model, /url, /no-think';
-  FrameLines[1] := 'Default: All prompts use Thinking Mode (evaluation loop)';
-  FrameLines[2] := 'Use /no-think for simple prompts without evaluation';
-  FrameLines[3] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  FrameLines[1] := '          /run <file> - Run prompts from file (one per line)';
+  FrameLines[2] := 'Default: All prompts use Thinking Mode (evaluation loop)';
+  FrameLines[3] := 'Use /no-think for simple prompts without evaluation';
+  FrameLines[4] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  FrameLines[5] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
   PrintFrame('HELP', FrameLines);
   WriteLn('');
   Flush(Output);
@@ -905,9 +910,28 @@ begin
   else if (Cmd = '/load') then
   begin
     if Arg = '' then Arg := 'chat.txt';
-    { ChatHistory_LoadFromFile(Arg); }
-    WriteLn('Loaded from: ', Arg);
+    if ChatHistory_LoadFromFile(Arg) then
+    begin
+      WriteLn('Loaded chat history from: ', Arg);
+    end
+    else
+    begin
+      WriteLn('Failed to load from: ', Arg);
+    end;
     Flush(Output);
+  end
+  else if (Cmd = '/run') then
+  begin
+    { Run commands/prompts from file }
+    if Arg = '' then
+    begin
+      WriteLn('Usage: /run <filename> - Run prompts from file (one per line)');
+      Flush(Output);
+    end
+    else
+    begin
+      HandleRunFile(Arg);
+    end;
   end
   else if (Cmd = '/model') then
   begin
@@ -950,6 +974,52 @@ begin
     HandleChatWithThinking(Input);
 end;
 
+procedure TCLI.HandleRunFile(const Filename: string);
+var
+  F: TextFile;
+  Line: string;
+  LineNum: Integer;
+begin
+  if not FileExists(Filename) then
+  begin
+    WriteLn('Error: File not found: ', Filename);
+    Flush(Output);
+    Exit;
+  end;
+  
+  WriteLn('Running prompts from: ', Filename);
+  Flush(Output);
+  
+  AssignFile(F, Filename);
+  Reset(F);
+  try
+    LineNum := 0;
+    while not EOF(F) do
+    begin
+      ReadLn(F, Line);
+      Inc(LineNum);
+      
+      { Skip empty lines and comments }
+      if (Trim(Line) = '') or (Trim(Line)[1] = '#') then
+        Continue;
+        
+      WriteLn('');
+      WriteLn('--- [Line ', LineNum, '] ', Line, ' ---');
+      Flush(Output);
+      
+      { Execute the prompt }
+      ProcessCommand(Line);
+      Flush(Output);
+    end;
+    
+    WriteLn('');
+    WriteLn('Finished running: ', Filename);
+    Flush(Output);
+  finally
+    CloseFile(F);
+  end;
+end;
+
 function TCLI.ParseArgs: Boolean;
 var
   i: Integer;
@@ -963,6 +1033,7 @@ begin
   FConfig.MaxTokens := 2048;
   FConfig.WorkingDirectory := GetCurrentDir;
   FFormat := lfOllama;
+  FInputFile := '';
   
   i := 1;
   while i <= ParamCount do
@@ -1003,13 +1074,35 @@ begin
         Continue;
       end;
     end
+    else if (ParamStr(i) = '-f') or (ParamStr(i) = '--file') then
+    begin
+      if i + 1 <= ParamCount then
+      begin
+        FInputFile := ParamStr(i + 1);
+        Inc(i, 2);
+        Continue;
+      end;
+    end
     else if (ParamStr(i) = '--openai') or (ParamStr(i) = '--openAI') then
     begin
       FFormat := lfOpenAI;
     end
     else if (ParamStr(i) = '--help') or (ParamStr(i) = '-h') then
     begin
-      WriteLn('Usage: agent [-u URL] [-m MODEL] [-k KEY] [-w DIR] [--openai|--ollama]');
+      WriteLn('Usage: agent [-u URL] [-m MODEL] [-k KEY] [-w DIR] [-f FILE] [--openai|--ollama]');
+      WriteLn('');
+      WriteLn('Options:');
+      WriteLn('  -u URL       API Base URL (default: http://localhost:11434)');
+      WriteLn('  -m MODEL     Model name (default: llama3)');
+      WriteLn('  -k KEY       API Key (optional)');
+      WriteLn('  -f FILE      Run prompts from file (non-interactive mode)');
+      WriteLn('  -w DIR       Working directory');
+      WriteLn('  --openai     Use OpenAI-compatible API format');
+      WriteLn('  --ollama     Use Ollama API format (default)');
+      WriteLn('');
+      WriteLn('Pipe mode:');
+      WriteLn('  echo "prompt" | ./agent');
+      WriteLn('  ./agent < prompts.txt');
       Exit(False);
     end;
     Inc(i);
@@ -1138,6 +1231,17 @@ begin
 
   WriteLn('Entering main loop...');
   Flush(Output);
+  
+  { Check if running in file mode }
+  if FInputFile <> '' then
+  begin
+    { File mode - run prompts from file and exit }
+    WriteLn('Running in file mode: ', FInputFile);
+    Flush(Output);
+    HandleRunFile(FInputFile);
+    SwitchToMainScreen;
+    Exit;
+  end;
   
   { Print initial status bar }
   PrintStatusBar;
