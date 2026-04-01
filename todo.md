@@ -136,13 +136,13 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [ ] Markdown-Datei mit Notizen pflegen
 
 ### 4.3 Project Memory (CLAUDE.md)
-- [ ] **Multi-Source Reading**
-  - [ ] ~/.claude/CLAUDE.md (global)
-  - [ ] ./CLAUDE.md (Projekt-Wurzel)
-  - [ ] ./CLAUDE.md in Unterverzeichnissen
-- [ ] **Injection in System Prompt**
-  - [ ] Jede Anfrage injizieren
-  - [ ] Durch Komprimierung überleben
+- [x] **Multi-Source Reading**
+  - [x] ~/.claude/CLAUDE.md (global)
+  - [x] ./CLAUDE.md (Projekt-Wurzel)
+  - [x] ./CLAUDE.md in Unterverzeichnissen
+- [x] **Injection in System Prompt**
+  - [x] Jede Anfrage injizieren
+  - [x] Durch Komprimierung überleben
 
 ---
 

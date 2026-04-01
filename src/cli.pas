@@ -1,5 +1,6 @@
 {
   Command Line Interface for the AI Assistant with Tool support.
+  Includes CLAUDE.md integration for project memory.
 }
 unit cli;
 
