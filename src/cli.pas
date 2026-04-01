@@ -335,7 +335,7 @@ procedure TCLI.InitializeTools;
 var
   Tools: array of TToolDef;
 begin
-  SetLength(Tools, 15);
+  SetLength(Tools, 16);
   
   Tools[0].Name := 'Bash';
   Tools[0].Description := 'Execute shell commands';
@@ -365,36 +365,40 @@ begin
   Tools[6].Description := 'Move or rename a file or directory';
   Tools[6].Parameters := '{"type":"object","properties":{"source":{"type":"string","description":"Source file or directory path"},"destination":{"type":"string","description":"Destination path or new name"}},"required":["source","destination"]}';
   
-  Tools[7].Name := 'Glob';
-  Tools[6].Description := 'Find files by pattern';
-  Tools[6].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
+  Tools[7].Name := 'Mkdir';
+  Tools[7].Description := 'Create a new directory';
+  Tools[7].Parameters := '{"type":"object","properties":{"path":{"type":"string","description":"Directory path to create"},"parents":{"type":"boolean","description":"Create parent directories (default: true)"}},"required":["path"]}';
   
-  Tools[7].Name := 'Grep';
-  Tools[7].Description := 'Search content in files';
-  Tools[7].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
+  Tools[8].Name := 'Glob';
+  Tools[8].Description := 'Find files by pattern';
+  Tools[8].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
+  
+  Tools[9].Name := 'Grep';
+  Tools[9].Description := 'Search content in files';
+  Tools[9].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
   
   // Task tools
-  Tools[8].Name := 'TaskCreate';
-  Tools[8].Description := 'Create a new task in the task list';
-  Tools[8].Parameters := '{"type":"object","properties":{"subject":{"type":"string"},"description":{"type":"string"},"activeForm":{"type":"string"}},"required":["subject"]}';
+  Tools[10].Name := 'TaskCreate';
+  Tools[10].Description := 'Create a new task in the task list';
+  Tools[10].Parameters := '{"type":"object","properties":{"subject":{"type":"string"},"description":{"type":"string"},"activeForm":{"type":"string"}},"required":["subject"]}';
   
-  Tools[9].Name := 'TaskList';
-  Tools[9].Description := 'List all tasks';
-  Tools[9].Parameters := '{"type":"object","properties":{}}';
+  Tools[11].Name := 'TaskList';
+  Tools[11].Description := 'List all tasks';
+  Tools[11].Parameters := '{"type":"object","properties":{}}';
   
-  Tools[10].Name := 'TaskUpdate';
-  Tools[10].Description := 'Update task status and fields';
-  Tools[10].Parameters := '{"type":"object","properties":{"id":{"type":"string"},"subject":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"blockedBy":{"type":"string"},"blocks":{"type":"string"}},"required":["id"]}';
+  Tools[12].Name := 'TaskUpdate';
+  Tools[12].Description := 'Update task status and fields';
+  Tools[12].Parameters := '{"type":"object","properties":{"id":{"type":"string"},"subject":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"blockedBy":{"type":"string"},"blocks":{"type":"string"}},"required":["id"]}';
   
   // Agent tool
-  Tools[11].Name := 'Agent';
-  Tools[11].Description := 'Spawn a sub-agent to perform a complex multi-step task';
-  Tools[11].Parameters := '{"type":"object","properties":{"description":{"type":"string"},"prompt":{"type":"string"},"subagent_type":{"type":"string"}},"required":["description","prompt"]}';
+  Tools[13].Name := 'Agent';
+  Tools[13].Description := 'Spawn a sub-agent to perform a complex multi-step task';
+  Tools[13].Parameters := '{"type":"object","properties":{"description":{"type":"string"},"prompt":{"type":"string"},"subagent_type":{"type":"string"}},"required":["description","prompt"]}';
   
   // Init tool
-  Tools[12].Name := 'Init';
-  Tools[12].Description := 'Create or update PROJECT.md with project documentation';
-  Tools[12].Parameters := '{"type":"object","properties":{"file_path":{"type":"string","description":"Optional: filename (default: PROJECT.md)"},"content":{"type":"string","description":"Optional: full markdown content. If empty, creates template"}},"required":[]}';
+  Tools[14].Name := 'Init';
+  Tools[14].Description := 'Create or update PROJECT.md with project documentation';
+  Tools[14].Parameters := '{"type":"object","properties":{"file_path":{"type":"string","description":"Optional: filename (default: PROJECT.md)"},"content":{"type":"string","description":"Optional: full markdown content. If empty, creates template"}},"required":[]}';
   
   FLLMClient.SetTools(Tools);
 end;
