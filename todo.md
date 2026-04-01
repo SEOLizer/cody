@@ -205,21 +205,21 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
 ## Phase 7: Planung und Denken (Thinking)
 
 ### 7.1 Autonomous Planning
-- [ ] **Task Creation**
-  - [ ] Automatische Todo-Erstellung für komplexe Aufgaben (3+ Schritte)
-  - [ ] TaskUpdate für Status (in_progress/completed)
-  - [ ] TaskList für Fortschrittsprüfung
+- [x] **Task Creation**
+  - [x] Automatische Todo-Erstellung für komplexe Aufgaben (3+ Schritte) (2026-04-01 implementiert)
+  - [x] TaskUpdate für Status (in_progress/completed)
+  - [x] TaskList für Fortschrittsprüfung
 
-- [ ] **Thinking Mode**
-  - [ ] Mehrfache LLM-Iterationen mit Zwischenergebnissen
-  - [ ] Gedankenkette anzeigen
-  - [ ] Planungsverifikation
+- [x] **Thinking Mode**
+  - [x] Mehrfache LLM-Iterationen mit Zwischenergebnissen (2026-04-01 implementiert)
+  - [x] Gedankenkette anzeigen
+  - [x] Planungsverifikation
 
 ### 7.2 Reasoning Chains
-- [ ] **Step-by-Step Execution**
-  - [ ] Jeden Schritt planen bevor handeln
-  - [ ] Zwischenzustände dokumentieren
-  - [ ] Bei Fehlern zurück zum letzten gültigen Zustand
+- [x] **Step-by-Step Execution**
+  - [x] Jeden Schritt planen bevor handeln (2026-04-01 implementiert)
+  - [x] Zwischenzustände dokumentieren
+  - [x] Bei Fehlern zurück zum letzten gültigen Zustand
 
 ---
 
@@ -381,6 +381,7 @@ Der Agent gilt als "vollständig funktionierend" wenn:
 | 3 | **History** | Persistenter Chat-Verlauf zwischen Sessions | [ ] Nicht umgesetzt | Mittel |
 | 4 | **Multi-Agent** | Mehrere Sub-Agents gleichzeitig | [ ] Nicht umgesetzt | Niedrig |
 | 5 | **Context Compression** | Automatische/reaktive Context-Komprimierung bei Token-Limit | [x] Implementiert (2026-04-01) | Mittel |
+| 6 | **Thinking/Planning** | Automatische Aufgabenanalyse und Planungsverifikation | [x] Implementiert (2026-04-01) | Mittel |
 
 ---
 
