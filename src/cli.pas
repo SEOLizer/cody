@@ -9,7 +9,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning;
 
 type
   TCLI = class
@@ -588,6 +588,31 @@ begin
     WriteLn(Response.Content);
     Flush(Output);
     
+    { Analyze task complexity and potentially create tasks }
+    if not Response.HasToolCall then
+    begin
+      case AnalyzeTaskComplexity(Input) of
+        tcComplex:
+        begin
+          WriteLn('');
+          WriteLn('[Task Analysis] Complex task detected. Generating plan...');
+          Flush(Output);
+          { Generate plan and show summary }
+          { (Plan generation happens during thinking, not enforced) }
+        end;
+        tcModerate:
+        begin
+          WriteLn('[Task Analysis] Moderate complexity - single step sufficient');
+          Flush(Output);
+        end;
+        tcSimple:
+        begin
+          WriteLn('[Task Analysis] Simple task - direct execution');
+          Flush(Output);
+        end;
+      end;
+    end;
+    
     { Add thinking to history }
     ChatHistory_AddMessage(Ord(ruAssistant), Response.Content);
     Inc(Iterations);
@@ -637,6 +662,33 @@ begin
       WriteLn('=== Evaluation ===');
       WriteLn(Response.Content);
       Flush(Output);
+      
+      { Plan verification during execution }
+      if Response.HasToolCall then
+      begin
+        { Continue - we're still executing steps }
+      end
+      else
+      begin
+        { No more tool calls - verify task completion }
+        WriteLn('');
+        WriteLn('[Verification] Task completion check...');
+        Flush(Output);
+        
+        { Check if the response indicates task is done }
+        if Pos('complete', LowerCase(Response.Content)) > 0 then
+        begin
+          WriteLn('[Verification] Task appears to be completed.');
+        end
+        else if Pos('done', LowerCase(Response.Content)) > 0 then
+        begin
+          WriteLn('[Verification] Task appears to be completed.');
+        end
+        else
+        begin
+          WriteLn('[Verification] Task may require further steps.');
+        end;
+      end;
       
       { Add response to history }
       if Response.Content <> '' then
