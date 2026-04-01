@@ -226,11 +226,16 @@ agent/
 │   ├── agent.lpr           # Main program
 │   ├── cli.pas             # CLI Interface & System Prompt
 │   ├── chathistory.pas     # Chat-Verwaltung (global)
-│   ├── llmclient.pas       # LLM API Client
+│   ├── llmclient.pas       # LLM API Client (Ollama + OpenAI)
 │   ├── httpclient.pas      # HTTP Client
 │   ├── types.pas           # Type-Definitionen (inkl. StopReasons, ResponseTypes)
 │   ├── tool_executor.pas   # Tool-Ausführung mit Permission-Checks
 │   ├── tool_permissions.pas # Permission System (Auto/Ask/Strict)
+│   ├── reasoning_chains.pas # Reasoning Chains & Checkpoints
+│   ├── context_compression.pas # Context Kompression
+│   ├── thinking_planning.pas # Task Analysis & Planning
+│   ├── ui_helper.pas       # Terminal UI Hilfsfunktionen
+│   ├── cursor_helper.pas   # Cursor Kontrolle
 │   ├── working_memory.pas  # Todo-Listen Persistenz
 │   ├── bash_tool.pas       # Bash Tool
 │   ├── read_tool.pas       # Read Tool
@@ -256,11 +261,40 @@ agent/
 
 ## Unterstützte LLM-Server
 
-- **Ollama** (Standard)
-- **LM Studio**
-- **llama.cpp**
-- **OpenAI-kompatible APIs** (auch Remote-Server)
-- **Any OpenAI-kompatibler Server** (z.B. localai, text-generation-webui)
+| Server | Status | Format | Endpoint |
+|--------|--------|--------|----------|
+| **Ollama** | ✅ Standard | Ollama API | `/api/chat` |
+| **LM Studio** | ✅ | OpenAI-kompatibel | `/v1/chat/completions` |
+| **llama.cpp** | ✅ | OpenAI-kompatibel | `/v1/chat/completions` |
+| **LocalAI** | ✅ | OpenAI-kompatibel | `/v1/chat/completions` |
+| **vLLM** | ✅ | OpenAI-kompatibel | `/v1/chat/completions` |
+| **OpenAI API** | ✅ | OpenAI | `/v1/chat/completions` |
+
+### API Features
+
+| Feature | Ollama | OpenAI-kompatibel |
+|---------|--------|-------------------|
+| **Tool Calls** | ✅ | ✅ |
+| **Streaming** | ✅ (stream: false) | ✅ (stream: false) |
+| **Temperature** | ✅ | ✅ |
+| **Max Tokens** | ✅ | ✅ |
+| **Tool-Call Parsing** | ✅ | ✅ |
+
+### Beispiel-Server URLs
+
+```bash
+# Ollama (Standard)
+./src/agent -u http://localhost:11434 -m llama3
+
+# LM Studio
+./src/agent -u http://localhost:1234/v1 -m llama3 --openai
+
+# llama.cpp
+./src/agent -u http://localhost:8080/v1 -m llama3 --openai
+
+# OpenAI API
+./src/agent -u https://api.openai.com/v1 -m gpt-4 -k sk-xxxxx --openai
+```
 
 ## Thinking Mode
 

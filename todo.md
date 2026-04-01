@@ -239,22 +239,22 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [x] Datei-basiertes Input mit -f Parameter
 
 ### 8.2 LM Studio / Ollama Integration
-- [ ] **Ollama API Format**
-  - [ ] /api/chat Endpunkt
-  - [ ] Stream: false support
-  - [ ] Tool-Call parsing
+- [x] **Ollama API Format** (2026-04-01 implementiert)
+  - [x] /api/chat Endpunkt
+  - [x] Stream: false support
+  - [x] Tool-Call parsing
 
-- [ ] **OpenAI-kompatibles Format**
-  - [ ] /v1/chat/completions Endpunkt
-  - [ ] tools array im Request
-  - [ ] tool_calls in Response
+- [x] **OpenAI-kompatibles Format** (2026-04-01 implementiert)
+  - [x] /v1/chat/completions Endpunkt
+  - [x] tools array im Request
+  - [x] tool_calls in Response
 
 ### 8.3 Model Management
-- [ ] **Model-Konfiguration**
-  - [ ] -m modelname
-  - [ ] -u baseurl
-  - [ ] -k apikey
-  - [ ] Temperature, MaxTokens
+- [x] **Model-Konfiguration** (2026-04-01 implementiert)
+  - [x] -m modelname
+  - [x] -u baseurl
+  - [x] -k apikey
+  - [x] Temperature, MaxTokens
 
 ---
 
