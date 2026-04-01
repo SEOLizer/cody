@@ -26,6 +26,7 @@ function ChatHistory_GetMessages: TMessageArray;
 function ChatHistory_GetMessagesForLMStudio(IncludeTools: Boolean): TMessageArray;
 procedure ChatHistory_Reset;
 procedure ChatHistory_SaveToFile(const AFilename: string);
+function ChatHistory_LoadFromFile(const AFilename: string): Boolean;
 
 implementation
 
@@ -150,6 +151,58 @@ begin
     end;
   finally 
     CloseFile(F); 
+  end;
+end;
+
+function ChatHistory_LoadFromFile(const AFilename: string): Boolean;
+var
+  F: TextFile;
+  Line, Content: string;
+  Role: Integer;
+  ColonPos: Integer;
+begin
+  Result := False;
+  
+  if not FileExists(AFilename) then
+    Exit;
+    
+  ChatHistory_Clear;
+  
+  AssignFile(F, AFilename);
+  Reset(F);
+  try
+    while not EOF(F) do
+    begin
+      ReadLn(F, Line);
+      
+      if Line = '' then
+        Continue;
+        
+      { Parse role prefix }
+      if Pos('USER: ', Line) = 1 then
+      begin
+        Role := 0;
+        Content := Copy(Line, 7, Length(Line) - 6);
+      end
+      else if Pos('ASSISTANT: ', Line) = 1 then
+      begin
+        Role := 1;
+        Content := Copy(Line, 12, Length(Line) - 11);
+      end
+      else if Pos('SYSTEM: ', Line) = 1 then
+      begin
+        Role := 2;
+        Content := Copy(Line, 9, Length(Line) - 8);
+      end
+      else
+        Continue; { Unknown format, skip line }
+        
+      ChatHistory_AddMessage(Role, Content);
+    end;
+    
+    Result := True;
+  finally
+    CloseFile(F);
   end;
 end;
 
