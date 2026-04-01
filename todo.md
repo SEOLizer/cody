@@ -27,11 +27,11 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [ ] SSE (Server-Sent Events) Support für Streaming
   - [ ] Echtzeit-Verarbeitung von Antwort-Blöcken
 
-- [ ] **Response Types**
-  - [ ] Text-Response Verarbeitung
-  - [ ] Tool-Use Block Erkennung
-  - [ ] Thinking/Reasoning Verarbeitung
-  - [ ] Tool-Result Rückführung
+- [x] **Response Types**
+  - [x] Text-Response Verarbeitung (TResponseType: rtText)
+  - [x] Tool-Use Block Erkennung (TResponseType: rtToolCall)
+  - [x] Thinking/Reasoning Verarbeitung (TResponseType: rtThinking)
+  - [x] Tool-Result Rückführung (via ChatHistory)
 
 - [x] **Stop Reasons**
   - [x] end_turn: Task abgeschlossen (srEndTurn)

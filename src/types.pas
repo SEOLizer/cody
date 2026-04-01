@@ -24,9 +24,18 @@ type
     srEndTurn,      { Task completed, LLM has finished }
     srToolUse,      { LLM wants to use a tool }
     srMaxTokens,    { Output limit reached }
-    srStop,          { Normal stop (Ollama) }
-    srLength,        { Length limit (OpenAI) }
-    srUnknown        { Unknown or error }
+    srStop,         { Normal stop (Ollama) }
+    srLength,       { Length limit (OpenAI) }
+    srUnknown       { Unknown or error }
+  );
+
+  { Response type categories }
+  TResponseType = (
+    rtNone,         { Empty response }
+    rtText,         { Plain text response }
+    rtThinking,     { Reasoning/thinking content }
+    rtToolCall,     { Tool call request }
+    rtMixed         { Multiple types combined }
   );
 
   { Message content block types }
@@ -69,12 +78,14 @@ type
   { Response from LLM - simplified }
   TLLMResponse = record
     Content: string;
+    Thinking: string;         { Reasoning/thinking content (if separate) }
     ToolCallName: string;
     ToolCallID: string;
     ToolCallInput: string;
     HasToolCall: Boolean;
+    ResponseType: TResponseType;
     StopReason: TStopReason;
-    StopReasonRaw: string;  { Raw string for debugging }
+    StopReasonRaw: string;    { Raw string for debugging }
     UsageInputTokens: Integer;
     UsageOutputTokens: Integer;
   end;
@@ -110,6 +121,9 @@ type
 
   { Convert raw stop reason string to TStopReason enum }
   function ParseStopReason(const RawReason: string): TStopReason;
+  
+  { Determine response type based on response content }
+  function DetermineResponseType(const Response: TLLMResponse): TResponseType;
 
 implementation
 
@@ -132,6 +146,19 @@ begin
     Result := srLength
   else
     Result := srUnknown;
+end;
+
+{ Determine response type based on response content }
+function DetermineResponseType(const Response: TLLMResponse): TResponseType;
+begin
+  if Response.HasToolCall then
+    Result := rtToolCall
+  else if Response.Thinking <> '' then
+    Result := rtThinking
+  else if Response.Content <> '' then
+    Result := rtText
+  else
+    Result := rtNone;
 end;
 
 end.
