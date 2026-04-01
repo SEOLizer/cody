@@ -346,6 +346,7 @@ function TLLMClient.ParseOpenAIResponse(const JSON: string): TLLMResponse;
 var
   ToolCallsStart, ToolCallObjStart: Integer;
   RawStopReason: string;
+  ContentValue: string;
 begin
   Result.Content := '';
   Result.Thinking := '';
@@ -388,6 +389,44 @@ begin
     if FindKeyPosition(JSON, '"message"') = 0 then
       Exit;
     Result.Content := ExtractJSONValue(JSON, 'content');
+    
+    // Strip <end_of_turn> marker if present
+    if Pos('<end_of_turn>', Result.Content) > 0 then
+    begin
+      Result.Content := Copy(Result.Content, 1, Pos('<end_of_turn>', Result.Content) - 1);
+    end;
+    
+    // Check for tool call in content (Qwen3 format: [{"name": "...", "arguments": {...}}])
+    if (Result.Content <> '') and (Length(Result.Content) > 2) then
+    begin
+      // Look for pattern [{"name": ...}] or similar
+      if (Result.Content[1] = '[') then
+      begin
+        // Find first { after [
+        ToolCallObjStart := 1;
+        while ToolCallObjStart <= Length(Result.Content) do
+        begin
+          if Result.Content[ToolCallObjStart] = '{' then
+            Break;
+          Inc(ToolCallObjStart);
+        end;
+        
+        // Check if there's a "name" key nearby (within first 50 chars after {)
+        if (ToolCallObjStart <= Length(Result.Content)) and 
+           (Pos('"name"', Copy(Result.Content, ToolCallObjStart, 50)) > 0) then
+        begin
+          Result.ToolCallName := ExtractJSONValueFromPos(Result.Content, ToolCallObjStart, 'name');
+          Result.ToolCallInput := ExtractJSONValueFromPos(Result.Content, ToolCallObjStart, 'arguments');
+          if Result.ToolCallName <> '' then
+          begin
+            Result.HasToolCall := True;
+            Result.StopReason := srToolUse;
+            Result.StopReasonRaw := 'tool_calls';
+            Result.Content := ''; // Clear content since it's a tool call
+          end;
+        end;
+      end;
+    end;
     
     // Parse stop reason
     RawStopReason := ExtractJSONValue(JSON, 'finish_reason');
