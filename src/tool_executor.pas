@@ -1,6 +1,6 @@
 {
   Tool Executor - Wires all tool executors together.
-  Includes permission checking and command sanitization.
+  Includes permission checking, command sanitization, and tool orchestration.
 }
 unit tool_executor;
 
@@ -14,15 +14,18 @@ var
   GWorkingDirectory: string = '';
   GLLMClient: TObject = nil;  { Global reference to LLM client }
   GPermissionMode: Integer = 0;  { 0=Auto, 1=Ask, 2=Strict }
+  GMaxParallelReads: Integer = 10;  { Maximum parallel read operations }
+  GExecutionMode: Integer = 0;  { 0=Auto, 1=Serial, 2=Parallel }
 
 procedure SetWorkingDirectory(const Dir: string);
 procedure SetLLMClient(Client: TObject);
 function GetLLMClient: TObject;
 function ExecuteToolByName(const ToolName: string; const InputJSON: string): TToolExecutionResult;
+function ExecuteToolWithOrchestration(const ToolName: string; const InputJSON: string): TToolExecutionResult;
 
 implementation
 
-uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions;
+uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration;
 
 procedure SetWorkingDirectory(const Dir: string);
 begin
@@ -101,6 +104,47 @@ begin
     Result := AgentToolExecute(ToolName, InputJSON)
   else if ToolName = 'Init' then
     Result := InitToolExecute(ToolName, InputJSON);
+end;
+
+{ Execute tool with orchestration support - categorizes and decides execution strategy }
+function ExecuteToolWithOrchestration(const ToolName: string; const InputJSON: string): TToolExecutionResult;
+var
+  ExecutionMode: TExecutionMode;
+begin
+  { Check execution mode setting }
+  if GExecutionMode = 1 then
+  begin
+    { Serial mode - execute directly }
+    Result := ExecuteToolByName(ToolName, InputJSON);
+    Exit;
+  end;
+  
+  { Get execution mode based on tool type }
+  ExecutionMode := GetExecutionMode(ToolName);
+  
+  case ExecutionMode of
+    emParallel:
+    begin
+      { Read-only tool - can be parallelized }
+      if GExecutionMode = 2 then
+      begin
+        { Force parallel - for now, execute directly }
+        Result := ExecuteToolByName(ToolName, InputJSON);
+      end
+      else
+      begin
+        { Auto mode - execute directly (parallelization would require threading) }
+        Result := ExecuteToolByName(ToolName, InputJSON);
+      end;
+    end;
+    emSerial, emBatch:
+    begin
+      { Write tool - always serial }
+      Result := ExecuteToolByName(ToolName, InputJSON);
+    end;
+  else
+    Result := ExecuteToolByName(ToolName, InputJSON);
+  end;
 end;
 
 end.

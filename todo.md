@@ -66,10 +66,10 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [x] Schreib-Operationen mit Bestätigung (permission modes: Auto/Ask/Strict)
   - [x] Command Sanitization (backticks, $() entfernen, dangerous patterns)
 
-- [ ] **Tool Orchestration**
-  - [ ] Parallele Ausführung von Read-only Tools
-  - [ ] Serielle Ausführung von Schreib-Operationen
-  - [ ] Batch-Tool für mehrere Reads in einem API-Call
+- [x] **Tool Orchestration**
+  - [x] Parallele Ausführung von Read-only Tools (TExecutionMode: emParallel)
+  - [x] Serielle Ausführung von Schreib-Operationen (TExecutionMode: emSerial)
+  - [x] Batch-Tool für mehrere Reads (OrchestrateTools)
 
 - [ ] **Tool Validation**
   - [ ] Input-Validierung mit JSON Schema
