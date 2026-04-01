@@ -1,6 +1,12 @@
 {
   Agent Tool - Spawn sub-agents for complex multi-step tasks.
   Based on Claude Code's AgentTool implementation.
+  
+  Features:
+  - Sub-Agent with clean slate (fresh chat history)
+  - Limited conversation depth (one level)
+  - Summary return to main agent
+  - Integrated types: Explore, Plan, Custom
 }
 unit agent_tool;
 
@@ -11,8 +17,16 @@ interface
 uses SysUtils, types, llmclient;
 
 type
+  { Sub-agent types }
+  TSubAgentType = (
+    satExplore,   { File search and exploration }
+    satPlan,       { Task planning }
+    satCustom      { Custom task execution }
+  );
+
   TAgentDefinition = record
     AgentType: string;
+    SubAgentType: TSubAgentType;
     WhenToUse: string;
     GetSystemPrompt: function: string;
     ModelOverride: string;
@@ -29,7 +43,9 @@ uses tool_executor, chathistory;
 
 var
   GCurrentAgentDepth: Integer = 0;
-  const MAX_AGENT_DEPTH = 2;
+  const MAX_AGENT_DEPTH = 1;  { Limited to one level of sub-agents }
+  GToolCallsMade: Integer = 0;
+  GToolCallLog: string = '';
 
 { Wrapper functions to access tool_executor globals }
 function GetLLMClient: TObject;
@@ -124,28 +140,47 @@ function GetAgentDefinition(AgentType: string): TAgentDefinition;
 begin
   Result.AgentType := AgentType;
   Result.ModelOverride := '';
+  Result.SubAgentType := satCustom;
 
   if LowerCase(AgentType) = 'explore' then
   begin
+    Result.SubAgentType := satExplore;
     Result.WhenToUse := 'Fast agent for exploring codebases.';
     Result.GetSystemPrompt := @GetExploreSystemPrompt;
     Result.IsReadOnly := True;
   end
   else if LowerCase(AgentType) = 'plan' then
   begin
+    Result.SubAgentType := satPlan;
     Result.WhenToUse := 'Agent for creating plans.';
     Result.GetSystemPrompt := @GetPlanSystemPrompt;
     Result.IsReadOnly := False;
   end
   else
   begin
+    Result.SubAgentType := satCustom;
     Result.WhenToUse := 'General-purpose agent for multi-step tasks.';
     Result.GetSystemPrompt := @GetGeneralPurposeSystemPrompt;
     Result.IsReadOnly := False;
   end;
 end;
 
-{ Run sub-agent with a given prompt - simplified version }
+{ Generate summary from tool call log }
+function GenerateSummary: string;
+var
+  LogLines: TStringArray;
+  i: Integer;
+begin
+  Result := '';
+  if GToolCallLog = '' then Exit;
+  
+  Result := '## Sub-Agent Summary' + LineEnding + LineEnding;
+  Result := Result + 'Tools executed: ' + IntToStr(GToolCallsMade) + LineEnding + LineEnding;
+  Result := Result + 'Tool call log:' + LineEnding;
+  Result := Result + GToolCallLog;
+end;
+
+{ Run sub-agent with clean slate }
 function RunSubAgent(Prompt, AgentType, WorkingDir: string): string;
 var
   LLMClient: TLLMClient;
@@ -156,6 +191,8 @@ var
   ToolResult: TToolExecutionResult;
 begin
   Result := '';
+  GToolCallsMade := 0;
+  GToolCallLog := '';
   
   LLMClient := TLLMClient(GetLLMClient);
   if LLMClient = nil then
@@ -208,8 +245,12 @@ begin
     
     { Execute tool call }
     Inc(ToolCallCount);
+    Inc(GToolCallsMade);
     WriteLn('[Agent] Tool call #', ToolCallCount, ': ', Response.ToolCallName, ' - ', Response.ToolCallInput);
     Flush(Output);
+    
+    { Log tool call }
+    GToolCallLog := GToolCallLog + '- ' + Response.ToolCallName + ': ' + Copy(Response.ToolCallInput, 1, 100) + LineEnding;
     
     { Execute tool via tool_executor }
     ToolResult := tool_executor.ExecuteToolByName(Response.ToolCallName, Response.ToolCallInput);
@@ -226,9 +267,14 @@ begin
   end;
   
   if Result = '' then
-    Result := 'Sub-agent reached maximum tool calls without producing final result.';
+    Result := 'Sub-agent reached maximum tool calls without producing final result.'
+  else if GToolCallsMade > 0 then
+  begin
+    { Append summary to result }
+    Result := Result + LineEnding + LineEnding + GenerateSummary;
+  end;
     
-  WriteLn('[Agent] Sub-agent done. Result length: ', Length(Result));
+  WriteLn('[Agent] Sub-agent done. Result length: ', Length(Result), ', Tools used: ', GToolCallsMade);
   Flush(Output);
   
   Dec(GCurrentAgentDepth);

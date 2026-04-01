@@ -88,11 +88,11 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
 ## Phase 3: Sub-Agents und Parallelität (Advanced)
 
 ### 3.1 Sub-Agent System
-- [ ] **Task Tool (Sub-Agent)**
-  - [ ] Erstelle Sub-Agent mit sauberem Slate
-  - [ ] Begrenzte Konversationstiefe (eine Ebene)
-  - [ ] Summary-Rückgabe an Haupt-Agent
-  - [ ] Integrierte Typen: Explore, Plan, Custom
+- [x] **Task Tool (Sub-Agent)**
+  - [x] Erstelle Sub-Agent mit sauberem Slate
+  - [x] Begrenzte Konversationstiefe (eine Ebene)
+  - [x] Summary-Rückgabe an Haupt-Agent
+  - [x] Integrierte Typen: Explore, Plan, Custom
 
 - [ ] **Fork Subagents**
   - [ ] Hintergrundausführung
