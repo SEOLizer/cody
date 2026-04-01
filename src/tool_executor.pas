@@ -1,5 +1,6 @@
 {
   Tool Executor - Wires all tool executors together.
+  Includes permission checking and command sanitization.
 }
 unit tool_executor;
 
@@ -12,6 +13,7 @@ uses SysUtils, types;
 var
   GWorkingDirectory: string = '';
   GLLMClient: TObject = nil;  { Global reference to LLM client }
+  GPermissionMode: Integer = 0;  { 0=Auto, 1=Ask, 2=Strict }
 
 procedure SetWorkingDirectory(const Dir: string);
 procedure SetLLMClient(Client: TObject);
@@ -20,7 +22,7 @@ function ExecuteToolByName(const ToolName: string; const InputJSON: string): TTo
 
 implementation
 
-uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient;
+uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions;
 
 procedure SetWorkingDirectory(const Dir: string);
 begin
@@ -41,11 +43,32 @@ begin
 end;
 
 function ExecuteToolByName(const ToolName: string; const InputJSON: string): TToolExecutionResult;
+var
+  PermResult: TPermissionResult;
 begin
   Result.Success := False;
   Result.Output := '';
   Result.ErrorMessage := 'Tool not found: ' + ToolName;
   
+  { Check permissions first }
+  PermResult := CheckToolPermission(ToolName, InputJSON);
+  
+  if PermResult = prDenied then
+  begin
+    Result.ErrorMessage := 'Permission denied: ' + ToolName + ' is not allowed in strict mode';
+    Exit;
+  end
+  else if PermResult = prAsk then
+  begin
+    { In Auto mode, we allow read-only tools automatically }
+    if not IsAutoApproved(ToolName) then
+    begin
+      { For now, allow in auto mode but could prompt user }
+      { TODO: Add interactive confirmation prompt }
+    end;
+  end;
+  
+  { Execute the tool }
   if ToolName = 'Bash' then
     Result := BashToolExecute(ToolName, InputJSON)
   else if ToolName = 'Read' then
