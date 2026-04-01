@@ -101,7 +101,7 @@ type
   end;
 
   { Tool types }
-  TToolType = (ttBash, ttRead, ttWrite, ttEdit, ttGlob, ttGrep);
+  TToolType = (ttBash, ttRead, ttWrite, ttEdit, ttGlob, ttGrep, ttLS, ttWebFetch, ttWebSearch);
 
   { Tool definition }
   TToolDefinition = record

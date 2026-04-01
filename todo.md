@@ -77,9 +77,9 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [x] Post-Tool Hooks (PostToolHook - statistics tracking)
 
 ### 2.3 Fehlende Tools (implementieren)
-- [ ] **LS** - Verzeichnisinhalt auflisten
-- [ ] **WebFetch** - Web-Inhalte abrufen
-- [ ] **WebSearch** - Web-Suche durchführen
+- [x] **LS** - Verzeichnisinhalt auflisten
+- [x] **WebFetch** - Web-Inhalte abrufen
+- [x] **WebSearch** - Web-Suche durchführen
 - [ ] **Edit** - Erweitern mit mehr Optionen (regex, line numbers)
 - [ ] **Bash** - Erweitern mit git-tools, docker, etc.
 
@@ -361,13 +361,14 @@ Der Agent gilt als "vollständig funktionierend" wenn:
 
 | # | Feature | Beschreibung | Status | Priorität |
 |---|---------|--------------|--------|-----------|
-| 1 | **SearchWeb** | Websuche für aktuelle Informationen | [ ] Nicht umgesetzt | Mittel |
-| 2 | **WebFetch** | URL-Inhalte abrufen | [ ] Nicht umgesetzt | Mittel |
+| 1 | **SearchWeb** | Websuche für aktuelle Informationen | [x] Implementiert (2026-04-01) | Mittel |
+| 2 | **WebFetch** | URL-Inhalte abrufen | [x] Implementiert (2026-04-01) | Mittel |
 | 3 | **FileTree** | Verzeichnisbaum anzeigen | [x] Implementiert (2024-04-01) | Niedrig |
 | 4 | **Diff** | Dateien vergleichen | [x] Implementiert (2024-04-01) | Niedrig |
 | 5 | **Move/Rename** | Dateien verschieben/umbenennen | [x] Implementiert (2024-04-01) | Niedrig |
 | 6 | **Delete** | Dateien löschen | [x] Implementiert (2024-04-01) | Niedrig |
 | 7 | **Mkdir** | Verzeichnisse erstellen | [x] Implementiert (2024-04-01) | Niedrig |
+| 8 | **LS** | Verzeichnisinhalt auflisten | [x] Implementiert (2026-04-01) | Niedrig |
 
 ---
 

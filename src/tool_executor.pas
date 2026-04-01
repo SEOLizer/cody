@@ -25,7 +25,7 @@ function ExecuteToolWithOrchestration(const ToolName: string; const InputJSON: s
 
 implementation
 
-uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration, tool_validation;
+uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, ls_tool, webfetch_tool, websearch_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration, tool_validation;
 
 procedure SetWorkingDirectory(const Dir: string);
 begin
@@ -109,6 +109,12 @@ begin
     Result := GlobToolExecute(ToolName, InputJSON)
   else if ToolName = 'Grep' then
     Result := GrepToolExecute(ToolName, InputJSON)
+  else if ToolName = 'LS' then
+    Result := LSToolExecute(ToolName, InputJSON)
+  else if ToolName = 'WebFetch' then
+    Result := WebFetchToolExecute(ToolName, InputJSON)
+  else if ToolName = 'WebSearch' then
+    Result := WebSearchToolExecute(ToolName, InputJSON)
   else if ToolName = 'TaskCreate' then
     Result := TaskCreateExecute(ToolName, InputJSON)
   else if ToolName = 'TaskList' then

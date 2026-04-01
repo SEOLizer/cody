@@ -172,6 +172,30 @@ begin
   Result.ToolType := ttGrep;
 end;
 
+function CreateLSToolDefinition: TToolDefinition;
+begin
+  Result.Name := 'LS';
+  Result.Description := 'List directory contents. Shows files and directories in a flat list, similar to the ls command.';
+  Result.InputSchema := '{"type":"object","properties":{"path":{"type":"string","description":"Directory to list (default: current directory)"},"show_hidden":{"type":"boolean","description":"Show hidden files (files starting with .)"},"all":{"type":"boolean","description":"Show all files including hidden"}},"required":[]}';
+  Result.ToolType := ttLS;
+end;
+
+function CreateWebFetchToolDefinition: TToolDefinition;
+begin
+  Result.Name := 'WebFetch';
+  Result.Description := 'Fetch content from a URL. Retrieves and returns the HTML/text content of a web page.';
+  Result.InputSchema := '{"type":"object","properties":{"url":{"type":"string","description":"URL to fetch"},"max_length":{"type":"integer","description":"Maximum characters to return (default: 50000)"}},"required":["url"]}';
+  Result.ToolType := ttWebFetch;
+end;
+
+function CreateWebSearchToolDefinition: TToolDefinition;
+begin
+  Result.Name := 'WebSearch';
+  Result.Description := 'Search the web for information. Returns search results with titles, URLs, and snippets.';
+  Result.InputSchema := '{"type":"object","properties":{"query":{"type":"string","description":"Search query"},"num_results":{"type":"integer","description":"Number of results to return (default: 5)"}},"required":["query"]}';
+  Result.ToolType := ttWebSearch;
+end;
+
 initialization
   GlobalToolRegistry := TToolRegistry.Create;
   GlobalToolRegistry.RegisterTool(CreateBashToolDefinition, nil);
@@ -180,6 +204,9 @@ initialization
   GlobalToolRegistry.RegisterTool(CreateEditToolDefinition, nil);
   GlobalToolRegistry.RegisterTool(CreateGlobToolDefinition, nil);
   GlobalToolRegistry.RegisterTool(CreateGrepToolDefinition, nil);
+  GlobalToolRegistry.RegisterTool(CreateLSToolDefinition, nil);
+  GlobalToolRegistry.RegisterTool(CreateWebFetchToolDefinition, nil);
+  GlobalToolRegistry.RegisterTool(CreateWebSearchToolDefinition, nil);
 
 finalization
   GlobalToolRegistry.Free;
