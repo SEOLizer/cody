@@ -33,11 +33,11 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [ ] Thinking/Reasoning Verarbeitung
   - [ ] Tool-Result Rückführung
 
-- [ ] **Stop Reasons**
-  - [ ] end_turn: Task abgeschlossen
-  - [ ] tool_use: Mehr Arbeit nötig
-  - [ ] max_tokens: Output-Limit erreicht
-  - [ ] Fehlerbehandlung bei jedem Stop-Grund
+- [x] **Stop Reasons**
+  - [x] end_turn: Task abgeschlossen (srEndTurn)
+  - [x] tool_use: Mehr Arbeit nötig (srToolUse)
+  - [x] max_tokens: Output-Limit erreicht (srMaxTokens)
+  - [x] Fehlerbehandlung bei jedem Stop-Grund (CLI output)
 
 ---
 
