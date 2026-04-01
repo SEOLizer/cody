@@ -71,10 +71,10 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [x] Serielle Ausführung von Schreib-Operationen (TExecutionMode: emSerial)
   - [x] Batch-Tool für mehrere Reads (OrchestrateTools)
 
-- [ ] **Tool Validation**
-  - [ ] Input-Validierung mit JSON Schema
-  - [ ] Pre-Tool Hooks (permissions, etc.)
-  - [ ] Post-Tool Hooks (logging, stats)
+- [x] **Tool Validation**
+  - [x] Input-Validierung mit Required Fields (ValidateToolInput)
+  - [x] Pre-Tool Hooks (PreToolHook - validation + permissions)
+  - [x] Post-Tool Hooks (PostToolHook - statistics tracking)
 
 ### 2.3 Fehlende Tools (implementieren)
 - [ ] **LS** - Verzeichnisinhalt auflisten
