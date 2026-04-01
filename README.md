@@ -36,8 +36,35 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | **TaskList** | Alle Tasks auflisten |
 | **TaskUpdate** | Task-Status aktualisieren |
 | **Init** | PROJECT.md Dokumentation erstellen |
+| **Agent** | Sub-Agent für komplexe Aufgaben |
 
-### 🧠 Intelligente Fähigkeiten
+### 🛡️ Sicherheit & Berechtigungen
+
+| Feature | Beschreibung |
+|---------|--------------|
+| **Auto-Approve** | Lese-Tools (Read, Glob, Grep, FileTree, Diff, TaskList) werden automatisch erlaubt |
+| **Permission Modes** | Drei Modi: Auto (Standard), Ask (Bestätigung für alles), Strict (nur Lesen) |
+| **Command Sanitization** | Blockiert gefährliche Commands (rm -rf, Pipes zu Shell, etc.) |
+| **Path Validation** | Nur Zugriff innerhalb des Working Directory erlaubt |
+
+### 💾 Session & Memory
+
+| Feature | Beschreibung |
+|---------|--------------|
+| **Working Memory** | Todo-Listen werden automatisch zwischen Sessions gespeichert/geladen |
+| **Context-Kompression** | Verhindert Token-Limit-Fehler durch automatische Kontext-Zusammenfassung |
+| **Error Recovery** | Automatische Wiederherstellung bei API-Fehlern |
+
+### 🧠 Intelligente Verarbeitung
+
+| Feature | Beschreibung |
+|---------|--------------|
+| **Stop Reasons** | Erkennt: end_turn (fertig), tool_use (Tool nötig), max_tokens (Limit erreicht) |
+| **Response Types** | Kategorisiert: Text, Tool-Use, Thinking/Reasoning |
+| **Thinking Mode** | Iterative Evaluation mit Selbstkorrektur |
+| **MAX_TOOL_CALLS Limit** | Verhindert endlose Tool-Schleifen (Standard: 15) |
+
+### 🎮 Verfügbare Commands
 
 - **Code-Qualitätsbewertung**: Erkennt Code-Smells wie:
   - Duplikate
@@ -180,25 +207,35 @@ fpc -O2 -g -XX src/agent.lpr
 ```
 agent/
 ├── src/
-│   ├── agent.lpr       # Main program
-│   ├── cli.pas         # CLI Interface & System Prompt
-│   ├── chathistory.pas # Chat-Verwaltung (global)
-│   ├── llmclient.pas  # LLM API Client
-│   ├── httpclient.pas # HTTP Client
-│   ├── types.pas       # Type-Definitionen
-│   ├── tool_executor.pas # Tool-Ausführung
-│   ├── bash_tool.pas   # Bash Tool
-│   ├── read_tool.pas   # Read Tool
-│   ├── write_tool.pas  # Write Tool
-│   ├── edit_tool.pas   # Edit Tool
-│   ├── glob_tool.pas   # Glob Tool
-│   ├── grep_tool.pas   # Grep Tool
-│   ├── agent_tool.pas  # Sub-Agent Tool
-│   ├── init_tool.pas   # Init Tool (PROJECT.md)
-│   └── skills.pas      # Skills System
+│   ├── agent.lpr           # Main program
+│   ├── cli.pas             # CLI Interface & System Prompt
+│   ├── chathistory.pas     # Chat-Verwaltung (global)
+│   ├── llmclient.pas       # LLM API Client
+│   ├── httpclient.pas      # HTTP Client
+│   ├── types.pas           # Type-Definitionen (inkl. StopReasons, ResponseTypes)
+│   ├── tool_executor.pas   # Tool-Ausführung mit Permission-Checks
+│   ├── tool_permissions.pas # Permission System (Auto/Ask/Strict)
+│   ├── working_memory.pas  # Todo-Listen Persistenz
+│   ├── bash_tool.pas       # Bash Tool
+│   ├── read_tool.pas       # Read Tool
+│   ├── write_tool.pas      # Write Tool
+│   ├── edit_tool.pas       # Edit Tool
+│   ├── glob_tool.pas       # Glob Tool
+│   ├── grep_tool.pas       # Grep Tool
+│   ├── diff_tool.pas       # Diff Tool
+│   ├── file_tree_tool.pas  # FileTree Tool
+│   ├── move_tool.pas       # Move Tool
+│   ├── mkdir_tool.pas      # Mkdir Tool
+│   ├── delete_tool.pas     # Delete Tool
+│   ├── task_create_tool.pas # TaskCreate Tool
+│   ├── task_list_tool.pas  # TaskList Tool
+│   ├── task_update_tool.pas # TaskUpdate Tool
+│   ├── agent_tool.pas      # Sub-Agent Tool
+│   ├── init_tool.pas       # Init Tool (PROJECT.md)
+│   └── skills.pas          # Skills System
 ├── scripts/
-│   └── http-post.sh    # HTTP Helper Script
-└── README.md          # Diese Datei
+│   └── http-post.sh        # HTTP Helper Script
+└── README.md               # Diese Datei
 ```
 
 ## Unterstützte LLM-Server

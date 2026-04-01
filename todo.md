@@ -61,11 +61,10 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
 
 ### 2.2 Erweiterte Tool-Features
 
-- [ ] **Tool Permission System**
-  - [ ] Auto-genehmigte Tools (Read, Glob, Grep, LS)
-  - [ ] Schreib-Operationen mit Bestätigung
-  - [ ] Regelbasierte Permissions (settings.json)
-  - [ ] Command Sanitization (backticks, $() entfernen)
+- [x] **Tool Permission System**
+  - [x] Auto-genehmigte Tools (Read, Glob, Grep, FileTree, Diff, TaskList)
+  - [x] Schreib-Operationen mit Bestätigung (permission modes: Auto/Ask/Strict)
+  - [x] Command Sanitization (backticks, $() entfernen, dangerous patterns)
 
 - [ ] **Tool Orchestration**
   - [ ] Parallele Ausführung von Read-only Tools
