@@ -75,7 +75,8 @@ begin
   KeyPos := Pos('"' + Key + '":', JSON);
   if KeyPos = 0 then Exit;
   
-  ValueStart := KeyPos + Length(Key) + 3;
+  { Find colon: skip past both quotes of the key, then find the colon }
+  ValueStart := KeyPos + Length(Key) + 2;
   while ValueStart <= Length(JSON) do
   begin
     if JSON[ValueStart] = ':' then
