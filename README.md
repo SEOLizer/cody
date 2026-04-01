@@ -25,6 +25,9 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | **Read** | Dateiinhalte lesen |
 | **Write** | Neue Dateien erstellen |
 | **Edit** | Dateien via Find/Replace bearbeiten |
+| **Diff** | Zwei Dateien vergleichen und Unterschiede anzeigen |
+| **FileTree** | Verzeichnisbaum Struktur anzeigen |
+| **Move** | Dateien/Verzeichnisse verschieben oder umbenennen |
 | **Glob** | Dateien nach Pattern suchen |
 | **Grep** | Inhalten in Dateien suchen |
 | **TaskCreate** | Aufgabe in Task-Liste erstellen |

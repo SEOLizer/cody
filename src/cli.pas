@@ -335,7 +335,7 @@ procedure TCLI.InitializeTools;
 var
   Tools: array of TToolDef;
 begin
-  SetLength(Tools, 11);
+  SetLength(Tools, 15);
   
   Tools[0].Name := 'Bash';
   Tools[0].Description := 'Execute shell commands';
@@ -353,36 +353,48 @@ begin
   Tools[3].Description := 'Edit file by find/replace';
   Tools[3].Parameters := '{"type":"object","properties":{"file_path":{"type":"string"},"old_string":{"type":"string"},"new_string":{"type":"string"}},"required":["file_path","old_string","new_string"]}';
   
-  Tools[4].Name := 'Glob';
-  Tools[4].Description := 'Find files by pattern';
-  Tools[4].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
+  Tools[4].Name := 'Diff';
+  Tools[4].Description := 'Compare two files and show differences';
+  Tools[4].Parameters := '{"type":"object","properties":{"file_path1":{"type":"string","description":"First file to compare"},"file_path2":{"type":"string","description":"Second file to compare"}},"required":["file_path1","file_path2"]}';
   
-  Tools[5].Name := 'Grep';
-  Tools[5].Description := 'Search content in files';
-  Tools[5].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
+  Tools[5].Name := 'FileTree';
+  Tools[5].Description := 'Display directory tree structure';
+  Tools[5].Parameters := '{"type":"object","properties":{"path":{"type":"string","description":"Directory path (default: current directory)"},"max_depth":{"type":"integer","description":"Maximum depth (default: 3)"}},"required":[]}';
+  
+  Tools[6].Name := 'Move';
+  Tools[6].Description := 'Move or rename a file or directory';
+  Tools[6].Parameters := '{"type":"object","properties":{"source":{"type":"string","description":"Source file or directory path"},"destination":{"type":"string","description":"Destination path or new name"}},"required":["source","destination"]}';
+  
+  Tools[7].Name := 'Glob';
+  Tools[6].Description := 'Find files by pattern';
+  Tools[6].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
+  
+  Tools[7].Name := 'Grep';
+  Tools[7].Description := 'Search content in files';
+  Tools[7].Parameters := '{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}';
   
   // Task tools
-  Tools[6].Name := 'TaskCreate';
-  Tools[6].Description := 'Create a new task in the task list';
-  Tools[6].Parameters := '{"type":"object","properties":{"subject":{"type":"string"},"description":{"type":"string"},"activeForm":{"type":"string"}},"required":["subject"]}';
+  Tools[8].Name := 'TaskCreate';
+  Tools[8].Description := 'Create a new task in the task list';
+  Tools[8].Parameters := '{"type":"object","properties":{"subject":{"type":"string"},"description":{"type":"string"},"activeForm":{"type":"string"}},"required":["subject"]}';
   
-  Tools[7].Name := 'TaskList';
-  Tools[7].Description := 'List all tasks';
-  Tools[7].Parameters := '{"type":"object","properties":{}}';
+  Tools[9].Name := 'TaskList';
+  Tools[9].Description := 'List all tasks';
+  Tools[9].Parameters := '{"type":"object","properties":{}}';
   
-  Tools[8].Name := 'TaskUpdate';
-  Tools[8].Description := 'Update task status and fields';
-  Tools[8].Parameters := '{"type":"object","properties":{"id":{"type":"string"},"subject":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"blockedBy":{"type":"string"},"blocks":{"type":"string"}},"required":["id"]}';
+  Tools[10].Name := 'TaskUpdate';
+  Tools[10].Description := 'Update task status and fields';
+  Tools[10].Parameters := '{"type":"object","properties":{"id":{"type":"string"},"subject":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"blockedBy":{"type":"string"},"blocks":{"type":"string"}},"required":["id"]}';
   
   // Agent tool
-  Tools[9].Name := 'Agent';
-  Tools[9].Description := 'Spawn a sub-agent to perform a complex multi-step task';
-  Tools[9].Parameters := '{"type":"object","properties":{"description":{"type":"string"},"prompt":{"type":"string"},"subagent_type":{"type":"string"}},"required":["description","prompt"]}';
+  Tools[11].Name := 'Agent';
+  Tools[11].Description := 'Spawn a sub-agent to perform a complex multi-step task';
+  Tools[11].Parameters := '{"type":"object","properties":{"description":{"type":"string"},"prompt":{"type":"string"},"subagent_type":{"type":"string"}},"required":["description","prompt"]}';
   
   // Init tool
-  Tools[10].Name := 'Init';
-  Tools[10].Description := 'Create or update PROJECT.md with project documentation';
-  Tools[10].Parameters := '{"type":"object","properties":{"file_path":{"type":"string","description":"Optional: filename (default: PROJECT.md)"},"content":{"type":"string","description":"Optional: full markdown content. If empty, creates template"}},"required":[]}';
+  Tools[12].Name := 'Init';
+  Tools[12].Description := 'Create or update PROJECT.md with project documentation';
+  Tools[12].Parameters := '{"type":"object","properties":{"file_path":{"type":"string","description":"Optional: filename (default: PROJECT.md)"},"content":{"type":"string","description":"Optional: full markdown content. If empty, creates template"}},"required":[]}';
   
   FLLMClient.SetTools(Tools);
 end;
