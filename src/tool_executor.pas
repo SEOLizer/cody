@@ -25,7 +25,7 @@ function ExecuteToolWithOrchestration(const ToolName: string; const InputJSON: s
 
 implementation
 
-uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, ls_tool, webfetch_tool, websearch_tool, fork_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration, tool_validation;
+uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, ls_tool, webfetch_tool, websearch_tool, fork_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration, tool_validation, request_optimizer;
 
 procedure SetWorkingDirectory(const Dir: string);
 begin
@@ -50,11 +50,30 @@ var
   PermResult: TPermissionResult;
   ValidResult: TValidationResult;
   StartTime: Int64;
+  CachedResult: string;
+  Optimizer: TRequestOptimizer;
 begin
   Result.Success := False;
   Result.Output := '';
   Result.ErrorMessage := 'Tool not found: ' + ToolName;
   StartTime := GetTickCount64;
+  
+  { Check cache for read-only tools }
+  Optimizer := GetRequestOptimizer;
+  if Optimizer <> nil then
+  begin
+    { Only cache read-only tools }
+    if (ToolName = 'Read') or (ToolName = 'Glob') or (ToolName = 'Grep') or 
+       (ToolName = 'LS') or (ToolName = 'FileTree') or (ToolName = 'TaskList') then
+    begin
+      if Optimizer.GetCachedToolResult(ToolName, InputJSON, CachedResult) then
+      begin
+        Result.Success := True;
+        Result.Output := CachedResult;
+        Exit;
+      end;
+    end;
+  end;
   
   { Pre-execution validation hook }
   ValidResult := PreToolHook(ToolName, InputJSON);
@@ -127,6 +146,16 @@ begin
     Result := ForkToolExecute(ToolName, InputJSON)
   else if ToolName = 'Init' then
     Result := InitToolExecute(ToolName, InputJSON);
+    
+  { Cache successful results for read-only tools }
+  if Result.Success and (Optimizer <> nil) then
+  begin
+    if (ToolName = 'Read') or (ToolName = 'Glob') or (ToolName = 'Grep') or 
+       (ToolName = 'LS') or (ToolName = 'FileTree') or (ToolName = 'TaskList') then
+    begin
+      Optimizer.CacheToolResult(ToolName, InputJSON, Result.Output);
+    end;
+  end;
     
   { Post-execution hook - record statistics }
   PostToolHook(ToolName, InputJSON, Result, GetTickCount64 - StartTime);

@@ -9,7 +9,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains, request_optimizer;
 
 type
   TCLI = class
@@ -87,14 +87,16 @@ end;
 
 procedure TCLI.PrintHelp;
 var
-  FrameLines: array[0..5] of string;
+  FrameLines: array[0..7] of string;
 begin
   FrameLines[0] := 'Commands: /help, /clear, /save [f], /load [f], /quit, /model, /url, /no-think';
   FrameLines[1] := '          /run <file> - Run prompts from file (one per line)';
-  FrameLines[2] := 'Default: All prompts use Thinking Mode (evaluation loop)';
-  FrameLines[3] := 'Use /no-think for simple prompts without evaluation';
-  FrameLines[4] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
-  FrameLines[5] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
+  FrameLines[2] := '          /stats - Show cache statistics';
+  FrameLines[3] := '          /cache [clear|on|off] - Manage cache';
+  FrameLines[4] := 'Default: All prompts use Thinking Mode (evaluation loop)';
+  FrameLines[5] := 'Use /no-think for simple prompts without evaluation';
+  FrameLines[6] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  FrameLines[7] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
   PrintFrame('HELP', FrameLines);
   WriteLn('');
   Flush(Output);
@@ -958,6 +960,37 @@ begin
   begin
     HandleSkillCommand(Arg);
   end
+  else if (Cmd = '/stats') then
+  begin
+    { Show cache statistics }
+    WriteLn('=== Cache Statistics ===');
+    WriteLn(GetRequestOptimizer.GetStats);
+    Flush(Output);
+  end
+  else if (Cmd = '/cache') then
+  begin
+    { Cache management }
+    if Arg = 'clear' then
+    begin
+      GetRequestOptimizer.ClearAllCaches;
+      WriteLn('All caches cleared.');
+    end
+    else if Arg = 'on' then
+    begin
+      GetRequestOptimizer.SetCacheEnabled(True);
+      WriteLn('Cache enabled.');
+    end
+    else if Arg = 'off' then
+    begin
+      GetRequestOptimizer.SetCacheEnabled(False);
+      WriteLn('Cache disabled.');
+    end
+    else
+    begin
+      WriteLn('Usage: /cache [clear|on|off]');
+    end;
+    Flush(Output);
+  end
   else if (Cmd = '/no-think') then
   begin
     { Explicitly disable thinking mode for this input }
@@ -1193,6 +1226,7 @@ begin
     SetWorkingDirectory(FConfig.WorkingDirectory);
     SetLLMClient(FLLMClient);  { Register LLM client globally for Agent tool }
     InitContextCompression;  { Initialize context compression module }
+    InitRequestOptimizer;  { Initialize request optimizer/caching }
     WriteLn('Working directory: ', FConfig.WorkingDirectory);
     Flush(Output);
   except

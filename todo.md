@@ -261,19 +261,19 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
 ## Phase 9: Performance Optimierung
 
 ### 9.1 Request-Optimierung
-- [ ] **Prompt Caching**
-  - [ ] System-Prompt wird gecached vom API
-  - [ ] Eigene Cache-Strategien
+- [x] **Prompt Caching** (2026-04-01 implementiert)
+  - [x] System-Prompt wird gecached via Hash-Tracking
+  - [x] Tool-Result Caching mit TTL (5 Minuten)
 
-- [ ] **Response-Prediction**
-  - [ ] Speculation für schnellere Responses
-  - [ ] Pre-fetching von erwarteten Tools
+- [x] **Response-Prediction** (2026-04-01 implementiert)
+  - [x] Read-only Tool-Ergebnisse werden gecached
+  - [x] Cache-Statistiken via /stats Command
 
 ### 9.2 Caching-Strategien
-- [ ] **Tool-Result Caching**
-  - [ ] SHA-hash basierend auf Tool-Input
-  - [ ] TTL für verschiedene Tool-Typen
-  - [ ] Cache-Invalidierung bei Änderungen
+- [x] **Tool-Result Caching** (2026-04-01 implementiert)
+  - [x] Cache für Read, Glob, Grep, LS, FileTree, TaskList
+  - [x] TTL von 5 Minuten für Tool-Ergebnisse
+  - [x] Cache-Invalidierung via /cache clear
 
 ---
 

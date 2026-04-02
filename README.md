@@ -69,6 +69,16 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | **Project** | `./CLAUDE.md` | Projekt-spezifische Anweisungen |
 | **Subdir** | `./<subdir>/CLAUDE.md` | Verzeichnis-spezifische Regeln |
 
+### ⚡ Performance & Caching
+
+| Feature | Beschreibung |
+|---------|--------------|
+| **Tool-Result Cache** | Read-only Tools (Read, Glob, Grep, LS, FileTree, TaskList) werden gecached |
+| **Cache TTL** | Tool-Ergebnisse: 5 Minuten, Responses: 1 Minute |
+| **System Prompt Tracking** | Hash-basierte Erkennung von Änderungen |
+| **Cache Stats** | Anzeige via `/stats` Command |
+| **Cache Management** | `/cache clear\|on\|off` für Cache-Kontrolle |
+
 ### 🧠 Intelligente Verarbeitung
 
 | Feature | Beschreibung |
@@ -126,6 +136,8 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | `/run <file>` | Prompts aus Datei ausführen |
 | `/model` | Modell-Info anzeigen |
 | `/url` | Server-URL anzeigen |
+| `/stats` | Cache-Statistiken anzeigen |
+| `/cache [clear\|on\|off]` | Cache verwalten |
 
 ## Beispiel-Prompts
 
@@ -247,6 +259,7 @@ agent/
 │   ├── context_compression.pas # Context Kompression (Auto/Micro/Reactive)
 │   ├── thinking_planning.pas # Task Analysis & Planning
 │   ├── claude_md.pas       # CLAUDE.md Integration (Projekt-Memory)
+│   ├── request_optimizer.pas # Request Caching & Optimierung
 │   ├── ui_helper.pas       # Terminal UI Hilfsfunktionen
 │   ├── cursor_helper.pas   # Cursor Kontrolle
 │   ├── working_memory.pas  # Todo-Listen Persistenz
