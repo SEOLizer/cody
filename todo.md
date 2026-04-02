@@ -11,10 +11,12 @@ Dieses Dokument listet alle noch offenen Funktionen auf, die implementiert werde
 - [ ] Echtzeit-Verarbeitung von Antwort-Blöcken
 - [ ] Streaming im LLM Client aktivieren
 
-### Config-Datei
-- [ ] JSON-Config-Datei (~/.agent/config.json)
-- [ ] Persistente Einstellungen (Model, URL, Temperature)
-- [ ] Config-Editor via /config Command
+### Config-Datei ✅ (2026-04-01 implementiert)
+- [x] JSON-Config-Datei (~/.agent/config.json)
+- [x] Persistente Einstellungen (Model, URL, Temperature, MaxTokens)
+- [x] Config-Editor via /config Command
+- [x] Automatisches Laden beim Start
+- [x] Command Line Args überschreiben Config
 
 ---
 

@@ -9,7 +9,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains, request_optimizer, tool_error_handler;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains, request_optimizer, tool_error_handler, config;
 
 type
   TCLI = class
@@ -87,7 +87,7 @@ end;
 
 procedure TCLI.PrintHelp;
 var
-  FrameLines: array[0..9] of string;
+  FrameLines: array[0..10] of string;
 begin
   FrameLines[0] := 'Commands: /help, /clear, /save [f], /load [f], /quit, /model, /url, /no-think';
   FrameLines[1] := '          /run <file> - Run prompts from file (one per line)';
@@ -95,10 +95,11 @@ begin
   FrameLines[3] := '          /cache [clear|on|off] - Manage cache';
   FrameLines[4] := '          /errors - Show error statistics';
   FrameLines[5] := '          /retry [reset|max N] - Configure retry settings';
-  FrameLines[6] := 'Default: All prompts use Thinking Mode (evaluation loop)';
-  FrameLines[7] := 'Use /no-think for simple prompts without evaluation';
-  FrameLines[8] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
-  FrameLines[9] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
+  FrameLines[6] := '          /config [save|create|path] - Configuration management';
+  FrameLines[7] := 'Default: All prompts use Thinking Mode (evaluation loop)';
+  FrameLines[8] := 'Use /no-think for simple prompts without evaluation';
+  FrameLines[9] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  FrameLines[10] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
   PrintFrame('HELP', FrameLines);
   WriteLn('');
   Flush(Output);
@@ -1025,6 +1026,40 @@ begin
     end;
     Flush(Output);
   end
+  else if (Cmd = '/config') then
+  begin
+    { Show or edit configuration }
+    if Arg = 'save' then
+    begin
+      { Save current config }
+      SaveConfig(MergeConfig(LoadConfig, FConfig.BaseURL, FConfig.Model, FConfig.APIKey,
+        FConfig.Temperature, FConfig.MaxTokens));
+      WriteLn('Configuration saved to: ', GetConfigFilePath);
+    end
+    else if Arg = 'path' then
+    begin
+      WriteLn('Config file: ', GetConfigFilePath);
+      if ConfigExists then
+        WriteLn('Status: exists')
+      else
+        WriteLn('Status: not found');
+    end
+    else if Arg = 'create' then
+    begin
+      { Create default config file }
+      SaveConfig(GetDefaultConfig);
+      WriteLn('Default configuration created at: ', GetConfigFilePath);
+    end
+    else
+    begin
+      { Show current config }
+      WriteLn(FormatConfig(MergeConfig(LoadConfig, FConfig.BaseURL, FConfig.Model, FConfig.APIKey,
+        FConfig.Temperature, FConfig.MaxTokens)));
+      WriteLn('');
+      WriteLn('Usage: /config [save|create|path]');
+    end;
+    Flush(Output);
+  end
   else if (Cmd = '/no-think') then
   begin
     { Explicitly disable thinking mode for this input }
@@ -1090,17 +1125,34 @@ end;
 function TCLI.ParseArgs: Boolean;
 var
   i: Integer;
+  FileConfig: TAgentConfig;
+  SavedURL: string;
+  SavedModel: string;
+  SavedKey: string;
+  SavedTemp: Double;
+  SavedTokens: Integer;
 begin
   Result := False;
   
-  FConfig.BaseURL := 'http://localhost:11434';
-  FConfig.APIKey := '';
-  FConfig.Model := 'llama3';
-  FConfig.Temperature := 0.7;
-  FConfig.MaxTokens := 2048;
-  FConfig.WorkingDirectory := GetCurrentDir;
+  { Load config from file first }
+  FileConfig := LoadConfig;
+  
+  { Use config file values as defaults }
+  FConfig.BaseURL := FileConfig.BaseURL;
+  FConfig.APIKey := FileConfig.APIKey;
+  FConfig.Model := FileConfig.Model;
+  FConfig.Temperature := FileConfig.Temperature;
+  FConfig.MaxTokens := FileConfig.MaxTokens;
+  FConfig.WorkingDirectory := FileConfig.WorkingDirectory;
   FFormat := lfOllama;
   FInputFile := '';
+  
+  { Store values to detect overrides }
+  SavedURL := FConfig.BaseURL;
+  SavedModel := FConfig.Model;
+  SavedKey := FConfig.APIKey;
+  SavedTemp := FConfig.Temperature;
+  SavedTokens := FConfig.MaxTokens;
   
   i := 1;
   while i <= ParamCount do
