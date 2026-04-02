@@ -152,6 +152,22 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | `/errors` | Error-Statistiken anzeigen |
 | `/retry [reset\|max N]` | Retry-Konfiguration anzeigen/setzen |
 
+### 🔧 Skills System
+
+Custom Commands können als Skills definiert werden in `~/.claude/skills.json`:
+
+```json
+[
+  {
+    "name": "review",
+    "description": "Code Review durchführen",
+    "prompt": "Führe einen Code-Review durch..."
+  }
+]
+```
+
+Aufruf: `/review <datei>` oder `/skills` für Liste
+
 ## Beispiel-Prompts
 
 ### Code-Analyse
@@ -381,6 +397,32 @@ Oder mit benutzerdefiniertem Inhalt:
 2. **Für Refactoring**: Bitte um einen Plan bevor Änderungen gemacht werden
 3. **Für Reviews**: Specifiziere die Art des Reviews (Sicherheit, Performance, Style)
 4. **Für große Projekte**: Verwende Tasks um den Fortschritt zu verfolgen
+
+## Vergleich mit Claude Code Original
+
+### Bereits implementiert ✅
+- CLI Interface mit erweiterter Command-Verarbeitung
+- 20+ Tools (Bash, Read, Write, Edit, Glob, Grep, etc.)
+- Tool Permission System (Auto/Ask/Strict)
+- Sub-Agent System mit Fork-Unterstützung
+- CLAUDE.md Integration (3-Layer Memory)
+- Context Kompression (Auto/Micro/Reactive)
+- Reasoning Chains mit Checkpoints
+- Thinking Mode mit Evaluations-Loop
+- Request Caching & Optimierung
+- Error Handling & Retry-Logik
+- Ollama & OpenAI API Support
+
+### Noch nicht implementiert ❌
+- **Streaming** - Echtzeit-Ausgabe von LLM-Responses
+- **MCP** - Model Context Protocol Integration
+- **Git Integration** - /commit, /branch, /pr Commands
+- **Session Management** - /resume, /session Commands
+- **Plugins** - Plugin-System für Erweiterungen
+- **Voice** - Sprach-Ein-/Ausgabe
+- **Remote Agents** - Verteilte Agenten
+- **LSP** - Language Server Protocol
+- **REPL** - Read-Eval-Print Loop
 
 ## Lizenz
 
