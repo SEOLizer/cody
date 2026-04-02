@@ -79,6 +79,17 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | **Cache Stats** | Anzeige via `/stats` Command |
 | **Cache Management** | `/cache clear\|on\|off` für Cache-Kontrolle |
 
+### 🔧 Error Handling & Retry
+
+| Feature | Beschreibung |
+|---------|--------------|
+| **Error Kategorisierung** | Syntax, Permission, FileNotFound, Timeout, Transient, Fatal |
+| **Retry-Logik** | Automatische Wiederholung bei transienten Fehlern |
+| **Max Retries** | Konfigurierbar (Standard: 3) |
+| **Retry Delay** | 1000ms zwischen Versuchen |
+| **Error Stats** | Anzeige via `/errors` Command |
+| **Retry Config** | `/retry max N` für Konfiguration |
+
 ### 🧠 Intelligente Verarbeitung
 
 | Feature | Beschreibung |
@@ -138,6 +149,8 @@ Dieser Agent ist ein CLI-Tool, das Large Language Models für Code-Analyse, Revi
 | `/url` | Server-URL anzeigen |
 | `/stats` | Cache-Statistiken anzeigen |
 | `/cache [clear\|on\|off]` | Cache verwalten |
+| `/errors` | Error-Statistiken anzeigen |
+| `/retry [reset\|max N]` | Retry-Konfiguration anzeigen/setzen |
 
 ## Beispiel-Prompts
 
@@ -260,6 +273,7 @@ agent/
 │   ├── thinking_planning.pas # Task Analysis & Planning
 │   ├── claude_md.pas       # CLAUDE.md Integration (Projekt-Memory)
 │   ├── request_optimizer.pas # Request Caching & Optimierung
+│   ├── tool_error_handler.pas # Error Handling & Retry-Logik
 │   ├── ui_helper.pas       # Terminal UI Hilfsfunktionen
 │   ├── cursor_helper.pas   # Cursor Kontrolle
 │   ├── working_memory.pas  # Todo-Listen Persistenz
