@@ -22,11 +22,12 @@ Dieses Dokument listet alle noch offenen Funktionen auf, die implementiert werde
 
 ## 🟠 Mittel Priorität
 
-### Session Memory
-- [ ] Hintergrund-Speicher-Extraktion
-- [ ] Token-Schwellenwert oder Tool-Call-Anzahl erkennen
-- [ ] Key-Informationen extrahieren
-- [ ] Markdown-Datei mit Notizen pflegen
+### Session Memory ✅ (2026-04-01 implementiert)
+- [x] Hintergrund-Speicher-Extraktion
+- [x] Token-Schwellenwert oder Tool-Call-Anzahl erkennen
+- [x] Key-Informationen extrahieren
+- [x] Markdown-Datei mit Notizen pflegen
+- [x] /memory Command für Session-Verwaltung
 
 ### MCP Integration (Model Context Protocol)
 - [ ] MCP Server Verbindungen

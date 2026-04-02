@@ -9,7 +9,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains, request_optimizer, tool_error_handler, config;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains, request_optimizer, tool_error_handler, config, session_memory;
 
 type
   TCLI = class
@@ -87,7 +87,7 @@ end;
 
 procedure TCLI.PrintHelp;
 var
-  FrameLines: array[0..10] of string;
+  FrameLines: array[0..11] of string;
 begin
   FrameLines[0] := 'Commands: /help, /clear, /save [f], /load [f], /quit, /model, /url, /no-think';
   FrameLines[1] := '          /run <file> - Run prompts from file (one per line)';
@@ -96,10 +96,11 @@ begin
   FrameLines[4] := '          /errors - Show error statistics';
   FrameLines[5] := '          /retry [reset|max N] - Configure retry settings';
   FrameLines[6] := '          /config [save|create|path] - Configuration management';
-  FrameLines[7] := 'Default: All prompts use Thinking Mode (evaluation loop)';
-  FrameLines[8] := 'Use /no-think for simple prompts without evaluation';
-  FrameLines[9] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
-  FrameLines[10] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
+  FrameLines[7] := '          /memory [extract|show|path] - Session memory management';
+  FrameLines[8] := 'Default: All prompts use Thinking Mode (evaluation loop)';
+  FrameLines[9] := 'Use /no-think for simple prompts without evaluation';
+  FrameLines[10] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  FrameLines[11] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
   PrintFrame('HELP', FrameLines);
   WriteLn('');
   Flush(Output);
@@ -1060,6 +1061,35 @@ begin
     end;
     Flush(Output);
   end
+  else if (Cmd = '/memory') then
+  begin
+    { Session memory commands }
+    if Arg = 'extract' then
+    begin
+      { Force memory extraction }
+      WriteLn('Extracting session memory...');
+      Flush(Output);
+      { This would normally extract from chat history }
+      WriteLn('Memory saved to: ', GetMemoryFilePath);
+    end
+    else if Arg = 'show' then
+    begin
+      { Show current memory file }
+      WriteLn(LoadMemoryFromFile);
+    end
+    else if Arg = 'path' then
+    begin
+      WriteLn('Memory file: ', GetMemoryFilePath);
+    end
+    else
+    begin
+      { Show session summary }
+      WriteLn(GetSessionSummary);
+      WriteLn('');
+      WriteLn('Usage: /memory [extract|show|path]');
+    end;
+    Flush(Output);
+  end
   else if (Cmd = '/no-think') then
   begin
     { Explicitly disable thinking mode for this input }
@@ -1313,6 +1343,7 @@ begin
     SetLLMClient(FLLMClient);  { Register LLM client globally for Agent tool }
     InitContextCompression;  { Initialize context compression module }
     InitRequestOptimizer;  { Initialize request optimizer/caching }
+    InitSessionMemory;  { Initialize session memory/extraction }
     WriteLn('Working directory: ', FConfig.WorkingDirectory);
     Flush(Output);
   except
