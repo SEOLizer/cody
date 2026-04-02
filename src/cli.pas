@@ -9,7 +9,7 @@ unit cli;
 interface
 
 uses
-  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains, request_optimizer;
+  SysUtils, types, llmclient, chathistory, skills, bash_tool, ui_helper, cursor_helper, context_compression, thinking_planning, reasoning_chains, request_optimizer, tool_error_handler;
 
 type
   TCLI = class
@@ -87,16 +87,18 @@ end;
 
 procedure TCLI.PrintHelp;
 var
-  FrameLines: array[0..7] of string;
+  FrameLines: array[0..9] of string;
 begin
   FrameLines[0] := 'Commands: /help, /clear, /save [f], /load [f], /quit, /model, /url, /no-think';
   FrameLines[1] := '          /run <file> - Run prompts from file (one per line)';
   FrameLines[2] := '          /stats - Show cache statistics';
   FrameLines[3] := '          /cache [clear|on|off] - Manage cache';
-  FrameLines[4] := 'Default: All prompts use Thinking Mode (evaluation loop)';
-  FrameLines[5] := 'Use /no-think for simple prompts without evaluation';
-  FrameLines[6] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
-  FrameLines[7] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
+  FrameLines[4] := '          /errors - Show error statistics';
+  FrameLines[5] := '          /retry [reset|max N] - Configure retry settings';
+  FrameLines[6] := 'Default: All prompts use Thinking Mode (evaluation loop)';
+  FrameLines[7] := 'Use /no-think for simple prompts without evaluation';
+  FrameLines[8] := 'Tools: Bash, Read, Write, Edit, Diff, FileTree, Move, Mkdir, Delete, Glob, Grep';
+  FrameLines[9] := 'Pipe mode: echo "prompt" | ./agent or ./agent < prompts.txt';
   PrintFrame('HELP', FrameLines);
   WriteLn('');
   Flush(Output);
@@ -988,6 +990,38 @@ begin
     else
     begin
       WriteLn('Usage: /cache [clear|on|off]');
+    end;
+    Flush(Output);
+  end
+  else if (Cmd = '/errors') then
+  begin
+    { Show error statistics }
+    WriteLn(GetErrorStats);
+    Flush(Output);
+  end
+  else if (Cmd = '/retry') then
+  begin
+    { Configure retry settings }
+    if Arg = 'reset' then
+    begin
+      ResetErrorStats;
+      WriteLn('Error statistics reset.');
+    end
+    else if Pos('max ', Arg) = 1 then
+    begin
+      { Set max retries }
+      GRetryConfig.MaxRetries := StrToIntDef(Copy(Arg, 5, Length(Arg) - 4), 3);
+      WriteLn('Max retries set to: ', GRetryConfig.MaxRetries);
+    end
+    else
+    begin
+      WriteLn('=== Retry Configuration ===');
+      WriteLn('Max Retries: ', GRetryConfig.MaxRetries);
+      WriteLn('Retry Delay: ', GRetryConfig.RetryDelayMs, 'ms');
+      WriteLn('Retry on Transient: ', GRetryConfig.RetryOnTransient);
+      WriteLn('Retry on Timeout: ', GRetryConfig.RetryOnTimeout);
+      WriteLn('');
+      WriteLn('Usage: /retry [reset|max <N>]');
     end;
     Flush(Output);
   end

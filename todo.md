@@ -179,15 +179,18 @@ Dieses Dokument listet alle Funktionen, die implementiert werden müssen, um ein
   - [x] Context-Collapse-Drain: Staged Collapses freigeben vor Retry
 
 ### 6.2 Tool-Ausführungsfehler
-- [ ] **Tool Error Handling**
-  - [ ] Syntax-Fehler erkennen
-  - [ ] Berechtigungs-Fehler
-  - [ ] Datei-nicht-gefunden-Fehler
-  - [ ] Zeitüberschreitungs-Fehler
+- [x] **Tool Error Handling** (2026-04-01 implementiert)
+  - [x] Syntax-Fehler erkennen
+  - [x] Berechtigungs-Fehler
+  - [x] Datei-nicht-gefunden-Fehler
+  - [x] Zeitüberschreitungs-Fehler
+  - [x] Transient-Fehler (Netzwerk, Connection)
 
-- [ ] **Retry-Logik**
-  - [ ] Automatische Wiederholung bei transienten Fehlern
-  - [ ] Max-Retries konfigurierbar
+- [x] **Retry-Logik** (2026-04-01 implementiert)
+  - [x] Automatische Wiederholung bei transienten Fehlern
+  - [x] Max-Retries konfigurierbar
+  - [x] /retry Command für Konfiguration
+  - [x] /errors Command für Statistiken
 
 ### 6.3 Session-Wiederherstellung
 - [ ] **Fehlerzustand erkennen**

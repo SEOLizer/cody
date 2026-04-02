@@ -22,10 +22,11 @@ procedure SetLLMClient(Client: TObject);
 function GetLLMClient: TObject;
 function ExecuteToolByName(const ToolName: string; const InputJSON: string): TToolExecutionResult;
 function ExecuteToolWithOrchestration(const ToolName: string; const InputJSON: string): TToolExecutionResult;
+function ExecuteToolWithRetry(const ToolName: string; const InputJSON: string; MaxRetries: Integer = 3): TToolExecutionResult;
 
 implementation
 
-uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, ls_tool, webfetch_tool, websearch_tool, fork_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration, tool_validation, request_optimizer;
+uses bash_tool, read_tool, write_tool, edit_tool, diff_tool, file_tree_tool, move_tool, mkdir_tool, delete_tool, glob_tool, grep_tool, ls_tool, webfetch_tool, websearch_tool, fork_tool, task_create_tool, task_list_tool, task_update_tool, agent_tool, init_tool, llmclient, tool_permissions, tool_orchestration, tool_validation, request_optimizer, tool_error_handler;
 
 procedure SetWorkingDirectory(const Dir: string);
 begin
@@ -199,6 +200,53 @@ begin
     end;
   else
     Result := ExecuteToolByName(ToolName, InputJSON);
+  end;
+end;
+
+{ Execute tool with retry logic for transient errors }
+function ExecuteToolWithRetry(const ToolName: string; const InputJSON: string; MaxRetries: Integer): TToolExecutionResult;
+var
+  RetryCount: Integer;
+  ErrorType: TToolErrorType;
+  LastError: string;
+begin
+  RetryCount := 0;
+  LastError := '';
+  
+  while RetryCount <= MaxRetries do
+  begin
+    Result := ExecuteToolByName(ToolName, InputJSON);
+    
+    if Result.Success then
+      Exit;
+      
+    ErrorType := CategorizeError(ToolName, Result);
+    LastError := Result.ErrorMessage;
+    
+    { Update statistics }
+    Inc(GTotalErrors);
+    Inc(GErrorsByType[ErrorType]);
+    
+    { Check if retryable }
+    if not IsRetryableError(ErrorType) then
+    begin
+      { Not retryable - return error }
+      Result.ErrorMessage := GetErrorDescription(ErrorType) + ': ' + LastError;
+      Exit;
+    end;
+    
+    { Check retry limit }
+    if RetryCount >= MaxRetries then
+    begin
+      Result.ErrorMessage := 'Max retries (' + IntToStr(MaxRetries) + ') exceeded. Last error: ' + LastError;
+      Exit;
+    end;
+    
+    { Wait before retry }
+    if GRetryConfig.RetryDelayMs > 0 then
+      Sleep(GRetryConfig.RetryDelayMs);
+      
+    Inc(RetryCount);
   end;
 end;
 
